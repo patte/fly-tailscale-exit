@@ -133,14 +133,14 @@ Note: It seems not all fly regions have their own exit routers and some use anot
 
 https://user-images.githubusercontent.com/3500621/129452587-7ff90cd2-5e6d-4e39-9a91-548c498636f5.mp4
 
-#### 15. halt
+#### 14. halt
 In case you want to stop:
 ```
 sudo systemctl stop tailscaled
 fly suspend
 ```
 
-#### 16. remove
+#### 15. remove
 In case you want to tear it down:
 ```
 fly orgs delete banana-bender-net
