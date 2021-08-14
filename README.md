@@ -13,6 +13,12 @@ Well, why not run it "yourself"? This guide helps you to set up a globally distr
 Sounds too good to be true. Well that's probably because it is. I compiled this setup as an excercise while exploring the capabilities of fly.io and tailscale. This is probably not what you should use as a serious VPN replacement. Go to one of the few trustworthy providers. For the reasons why this is a bad idea, read [below](#user-content-why-this-probably-is-a-bad-idea).
 
 
+
+https://user-images.githubusercontent.com/3500621/129452512-616e7642-5a03-4037-9dc1-f6be96ca1e30.mp4
+
+![Screenshot](https://user-images.githubusercontent.com/3500621/129452513-52133b60-02b8-4ec8-9605-0a6e3a089f9e.png)
+
+
 ## Setup
 
 #### 1. Have GitHub account
@@ -124,6 +130,8 @@ fly scale count 2
 Wait for the node to appear in tailscale, confirm it to be a legit exit node (step 9), choose it in your client and in less than 5 minutes to access the internet in another place.
 Note: Scaling up also reinitializes the existing nodes. Just use the newly created one and delete the old.
 Note: It seems not all fly regions have their own exit routers and some use another for egress traffic. This needs further investigation.
+
+https://user-images.githubusercontent.com/3500621/129452587-7ff90cd2-5e6d-4e39-9a91-548c498636f5.mp4
 
 
 #### 14. Enjoy
