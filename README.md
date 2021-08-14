@@ -127,7 +127,7 @@ To add or remove regions just type:
 fly regions add hkg
 fly scale count 2
 ```
-Wait for the node to appear in tailscale, confirm it to be a legit exit node (step 9), choose it in your client and in less than 5 minutes to access the internet in another place.
+Wait for the node to appear in tailscale, confirm it to be a legit exit node (step 11), choose it in your client and in less than 5 minutes to access the internet in another place.
 Note: Scaling up also reinitializes the existing nodes. Just use the newly created one and delete the old.
 Note: It seems not all fly regions have their own exit routers and some use another for egress traffic. This needs further investigation.
 
