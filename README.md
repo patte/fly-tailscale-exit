@@ -112,7 +112,7 @@ On iOS, choose "use exit node" and there you go.
 
 On linux, just run
 ```
-tailscale up --use-exit-node=fly-fra-tailwing
+tailscale up --use-exit-node=fly-fra
 ```
 
 #### 13. Regions
@@ -130,15 +130,15 @@ Note: It seems not all fly regions have their own exit routers and some use anot
 Just enjoy the magnificence, the crazyness of the house of cards that the modern cloud is.
 
 #### 15. halt
-`
+```
 sudo systemctl stop tailscaled
 fly suspend
-`
+```
 
 #### 16. remove
-`
+```
 fly orgs delete banana-bender-net
-`
+```
 I think there is no way to delete a tailscale org.
 
 
