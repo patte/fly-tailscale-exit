@@ -152,16 +152,17 @@ All you need to do to invite friends into your network is to invite them to the 
 
 
 ## Why this probably is a bad idea
-- Dirty traffic for fly.io.
-	Usually traffic exiting fly machines is upstream API traffic not dirty users surfing the web. If too many people do this and use it for scraping or worse fly's traffic reputation might suffer.
+- Dirty egress traffic for fly.io.<br>
+Usually traffic exiting fly machines is upstream API traffic not dirty users surfing the web. If too many people do this and use it for scraping or worse fly's traffic reputation might suffer.
 
-- Increased traffic on tailscale derp servers.
+- Increased traffic on tailscale derp servers.<br>
   Usually tailscale is used for internal networks. If everybody uses this as their everyday VPN the traffic the derp servers might increase beyond what's forseen.
 
-- Tailscale teams is supposed to cost money.
+- Tailscale teams is supposed to cost money.<br>
   ~~Tailscale lists teams to [cost $5 per user per month](https://tailscale.com/pricing/) but creating and using a github org in the way described above doesn't count as team but as personal account. I didn't find a way to upgrade an org created this way into a paying org. Please let me pay ;)~~ It seems you can pay at tailscale for a github team now, so go there and do that if you use this together with others: https://login.tailscale.com/admin/settings/billing/plans This makes this VPN approach being fully paid.
 > You’ll never be stopped from spinning up more devices or subnet routers, or trying out ACL rules. We encourage you to play around, find what works best for you, and update your payment settings after-the-fact.
-https://tailscale.com/blog/2021-06-new-pricing/
+
+[source](https://tailscale.com/blog/2021-06-new-pricing/)
 Kudos to tailscale for using soft-limit, IMHO this makes for a great user experience and I'd expect it to simplify some code parts as well.
 
 ## Love Letter
