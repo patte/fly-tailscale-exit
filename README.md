@@ -48,11 +48,17 @@ _A ephemeral key would be better for our use case, but it's restricted to IPv6 o
 Install the cli to your machine and login with github: https://fly.io/docs/hands-on/installing/
 
 #### 7. Have fly.io organization
+- Go to https://fly.io/organizations/ and create an organization (or) you can create organization using fly.io cli 
 - Create an org with the same name in fly (technically there is no requirement to name it the same).
-`fly orgs create banana-bender-net`
+`flyctl orgs create banana-bender-net`
 - Go and enter your credit card at [https://fly.io/organizations/banana-bender-net](https://fly.io/organizations). It's only going to be charged if you use more than the [free resources](https://fly.io/docs/about/pricing/).
 
-#### 8. Setup fly
+#### 8. Setup fly app 
+```
+git clone 
+cd fly-tailscale-exit
+flyctl launch 
+```
 Deploy this app to fly. It's basically a Dockerfile that runs tailscale in alpine and a start stript to keep it running.
 ```
 fly init --import=fly-template.toml
