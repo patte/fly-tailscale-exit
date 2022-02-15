@@ -56,9 +56,10 @@ Install the cli to your machine and login with github: https://fly.io/docs/hands
 #### 8. Setup fly app 
 ```
 git clone https://github.com/justforvpn/fly-tailscale-exit.git
-cd fly-tailscale-exit
-flyctl launch 
 
+cd fly-tailscale-exit
+
+flyctl launch 
 ```
 Deploy this app to fly. It's basically a Dockerfile that runs tailscale in alpine and a start stript to keep it running.
 ```
