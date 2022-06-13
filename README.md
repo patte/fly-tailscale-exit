@@ -1,7 +1,8 @@
 fly-tailscale-exit
 ------------------
 
-This repo shows how to run tailscale on fly, specifically to run exit nodes. The simple Dockerfile based on alpine can also be adapted to run tailscale along side your production app running on fly.
+This repo shows how to run tailscale on fly, specifically to run exit nodes.
+If you want to add tailscale to a fly.io application, follow this guide instead: https://tailscale.com/kb/1132/flydotio/
 
 Did you ever need a wormhole to another place in the internet? But you didn't trust the shady VPN providers with ads all over YouTube?
 Well, why not run it "yourself"? This guide helps you to set up a globally distributed and easily sharable VPN service for you and your friends.
