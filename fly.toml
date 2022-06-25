@@ -1,0 +1,21 @@
+app = "tailwings"
+
+kill_signal = "SIGINT"
+kill_timeout = 5
+
+[env]
+  PORT="41641"
+# create a reusable or ephemeral auth key
+# ephemeral auth key are not working for use as exit node as they are ipv6 only
+# flyctl secrets set TAILSCALE_AUTH_KEY=tskey-...
+
+[experimental]
+  auto_rollback = false
+  private_network = true
+
+[[services]]
+  internal_port = 41641
+  protocol = "udp"
+
+  [[services.ports]]
+    port = "41641"
