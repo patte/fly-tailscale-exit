@@ -110,13 +110,13 @@ https://user-images.githubusercontent.com/3500621/129452587-7ff90cd2-5e6d-4e39-9
 In case you want to stop:
 ```
 sudo systemctl stop tailscaled
-fly suspend
+flyctl suspend
 ```
 
 #### 15. remove
 In case you want to tear it down:
 ```
-fly orgs delete banana-bender-net
+flyctl orgs delete banana-bender-net
 ```
 I think there is no way to delete a tailscale org.
 
