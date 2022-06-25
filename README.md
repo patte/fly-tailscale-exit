@@ -56,7 +56,7 @@ Install the cli to your machine and login with github: https://fly.io/docs/hands
 
 #### 8. Setup fly app 
 ```
-git clone https://github.com/justforvpn/fly-tailscale-exit.git
+git clone https://github.com/patte/fly-tailscale-exit.git
 
 cd fly-tailscale-exit
 
