@@ -4,7 +4,7 @@ ARG TSFILE=tailscale_${TSVERSION}_amd64.tgz
 FROM alpine:latest as tailscale
 ARG TSFILE
 WORKDIR /app
-#ENV TSFILE=tailscale_1.26.2_amd64.tgz
+
 RUN wget https://pkgs.tailscale.com/stable/${TSFILE} && \
   tar xzf ${TSFILE} --strip-components=1
 COPY . ./
