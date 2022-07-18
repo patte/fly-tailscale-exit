@@ -2,6 +2,7 @@ fly-tailscale-exit
 ------------------
 
 ![Action Status: auto update tailscale version](https://github.com/patte/fly-tailscale-exit/actions/workflows/auto-update-tailscale.yml/badge.svg)
+![Action Status: auto update tailscale version](https://github.com/patte/fly-tailscale-exit/actions/workflows/auto-deploy-to-fly.yml/badge.svg)
 
 This repo shows how to run tailscale on fly, specifically to run exit nodes.
 If you want to add tailscale to a fly.io application, follow this guide instead: https://tailscale.com/kb/1132/flydotio/
@@ -127,6 +128,35 @@ In case you want to tear it down:
 flyctl orgs delete banana-bender-net
 ```
 I think there is no way to delete a tailscale org.
+
+#### 16. [Optional] Auto deployment using GitHub Action
+If you want to setup auto deployment, you'll need to fork this repo and add some environment variables to repo secrets.
+Also, you'll have to deploy to Fly.io at least once for this to work (scaled instance will update too!).
+
+Get your Tailscale API key at <https://login.tailscale.com/admin/settings/keys>, "Generate API Key".
+
+Get your Fly.io API key at <https://fly.io/user/personal_access_tokens>, "Create token".
+
+In your Tailscale "Access Control" ACL editor, add following:
+```json
+	"autoApprovers": {
+		// Auto approve all exit nodes with tag:vpn.
+		"exitNode": ["tag:vpn"],
+	},
+```
+and make sure in your `tagOwners` section, have `"tag:vpn"` added.
+
+Please note that for auto deployment to work, your Tailscale Auth key needs to be reuseable, pre-authorized and have tag enabled. They tag selected in the Auth key section should be the same one as the one specified in `autoApprovers`.
+
+Next, go to your forked repository -> "Settings" -> "Secrets" -> "Actions" -> "New repository secret".
+
+Add `FLY_API_TOKEN`, `TS_API_DOMAIN`, `TS_API_TOKEN` and `TS_TAG` respectively (examples in `.env.example`).
+
+The `Auto Update` GitHub Action is set to run ONCE every SUNDAY, `Auto Deploy` will run ONCE if `Auto Update` exited with no error.
+
+If you see the update icon in Tailscale console, invoke `Auto Update` action but not `Auto Deploy`.
+
+The `workflow_dispatch` is only for debug purposes, DO NOT INVOKE if you don't know what you are doing!
 
 ## Invite your friends
 All you need to do to invite friends into your network is to invite them to the github organization, have them install tailscale and login with github. They immediately see the available exit nodes and can use whichever they please. Easiest VPN setup ever!!
