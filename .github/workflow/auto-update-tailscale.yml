@@ -3,6 +3,7 @@ name: Auto Update Tailscale
 on:
   schedule:
     - cron:  '0 0 * * 0'
+  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
