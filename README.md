@@ -14,10 +14,13 @@ Well, why not run it "yourself"? This guide helps you to set up a globally distr
 Sounds too good to be true. Well that's probably because it is. I compiled this setup as an excercise while exploring the capabilities of fly.io and tailscale. This is probably not what you should use as a serious VPN replacement. Go to one of the few trustworthy providers. For the reasons why this is a bad idea, read [below](#user-content-why-this-probably-is-a-bad-idea).
 
 
-
-https://user-images.githubusercontent.com/3500621/129452512-616e7642-5a03-4037-9dc1-f6be96ca1e30.mp4
-
 ![Screenshot](https://user-images.githubusercontent.com/3500621/129452513-52133b60-02b8-4ec8-9605-0a6e3a089f9e.png)
+
+<details>
+<summary>Video of tailscale on iOS changing exit nodes.</summary>
+<br>
+https://user-images.githubusercontent.com/3500621/129452512-616e7642-5a03-4037-9dc1-f6be96ca1e30.mp4
+</details>
 
 
 ## Setup
@@ -46,23 +49,23 @@ _A ephemeral key would be better for our use case, but it's restricted to IPv6 o
 
 
 #### 6. Have fly.io account and cli
-Install the cli to your machine and login with github: https://fly.io/docs/hands-on/installing/
+Install the fly-cli to your machine and login with github: https://fly.io/docs/hands-on/installing/
 
 #### 7. Have fly.io organization
-- Go to https://fly.io/organizations/ and create an organization (or) you can create organization using fly.io cli 
-- Create an org with the same name in fly (technically there is no requirement to name it the same).
+- Create an org on fly (technically there is no requirement to name it the same).
 `flyctl orgs create banana-bender-net`
 - Go and enter your credit card at [https://fly.io/organizations/banana-bender-net](https://fly.io/organizations). It's only going to be charged if you use more than the [free resources](https://fly.io/docs/about/pricing/).
 
-#### 8. Setup fly app 
+#### 8. Setup fly
+Give the app the name you wan't. Don't deploy yet.
 ```
 git clone https://github.com/patte/fly-tailscale-exit.git
 
 cd fly-tailscale-exit
 
-flyctl launch 
+flyctl launch
 
-? fly.toml file already exits would you like copy its configuration : (yes/no) yes 
+? fly.toml file already exits would you like copy its configuration : (yes/no) yes
 
 ? App Name (leave blank to use an auto-generated name) tailwings
 
@@ -70,17 +73,20 @@ flyctl launch
 
 ? would you like to deploy postgressql for the app: (yes/no) no
 
-? would you like to deploy now : (yes/no) no 
+? would you like to deploy now : (yes/no) no
 ```
+
 #### 9. Set the tailscale auth key in fly
 ```
 flyctl secrets set TAILSCALE_AUTH_KEY=[see step 4]
 Secrets are staged for the first deployment
 ```
+
 #### 10. Deploy
 ```
 flyctl  deploy
 ```
+
 #### 11. Enable exit node in tailscale
 Wait for the node to appear in the tailscale machine overview.
 Enable exit routing for the nodes https://login.tailscale.com/admin/machines (see [tailscale docs](https://tailscale.com/kb/1103/exit-nodes/#step-2-allow-the-exit-node-from-the-admin-panel) on how to do it)
