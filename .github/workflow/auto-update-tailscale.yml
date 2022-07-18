@@ -1,0 +1,28 @@
+name: Auto Update Tailscale
+
+on:
+  schedule:
+    - cron:  '0 0 * * 0'
+
+jobs:
+  update_tailscale:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Get tailscale version and update Dockerfile
+        run: |
+          current_version=$(head -n1 Dockerfile | sed -e "s/^ARG TSVERSION=//")
+          latest_version=$(curl https://pkgs.tailscale.com/stable/ | grep tailscale_ -m 1 | cut -d'_' -f 2)
+          if [ "$current_version" != "$latest_version" ]; then
+            sed -i "1 s/.*/ARG TSVERSION=$latest_version/" Dockerfile
+          fi
+      - name: Commit and Push
+        run: |
+          git config --global user.email "<>"
+          git config --global user.name "GitHub Action: auto update tailscale"
+          git add --all .
+          git commit -m "auto update tailscale version"
+          git push
