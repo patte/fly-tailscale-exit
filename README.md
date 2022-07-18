@@ -1,6 +1,8 @@
 fly-tailscale-exit
 ------------------
 
+![Action Status: auto update tailscale version](https://github.com/patte/fly-tailscale-exit/actions/workflows/auto-update-tailscale.yml/badge.svg)
+
 This repo shows how to run tailscale on fly, specifically to run exit nodes.
 If you want to add tailscale to a fly.io application, follow this guide instead: https://tailscale.com/kb/1132/flydotio/
 
