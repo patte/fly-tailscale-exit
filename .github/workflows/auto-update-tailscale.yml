@@ -26,7 +26,5 @@ jobs:
           git config --global user.name "GitHub Action: auto update tailscale"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add Dockerfile
-          if ! git diff-index --quiet HEAD; then
-            git commit -m "auto update tailscale version"
-            git push
-          fi
+          git commit -m "auto update tailscale version"
+          git push
