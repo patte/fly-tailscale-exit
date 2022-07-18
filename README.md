@@ -49,66 +49,38 @@ _A ephemeral key would be better for our use case, but it's restricted to IPv6 o
 Install the cli to your machine and login with github: https://fly.io/docs/hands-on/installing/
 
 #### 7. Have fly.io organization
+- Go to https://fly.io/organizations/ and create an organization (or) you can create organization using fly.io cli 
 - Create an org with the same name in fly (technically there is no requirement to name it the same).
-`fly orgs create banana-bender-net`
+`flyctl orgs create banana-bender-net`
 - Go and enter your credit card at [https://fly.io/organizations/banana-bender-net](https://fly.io/organizations). It's only going to be charged if you use more than the [free resources](https://fly.io/docs/about/pricing/).
 
-#### 8. Setup fly
-Deploy this app to fly. It's basically a Dockerfile that runs tailscale in alpine and a start stript to keep it running.
+#### 8. Setup fly app 
 ```
-fly init --import=fly-template.toml
+git clone https://github.com/patte/fly-tailscale-exit.git
+
+cd fly-tailscale-exit
+
+flyctl launch 
+
+? fly.toml file already exits would you like copy its configuration : (yes/no) yes 
 
 ? App Name (leave blank to use an auto-generated name) tailwings
 
 ? Select organization: banana-bender-net-test (banana-bender-net-test)
 
-Importing configuration from fly-template.toml
-New app created
-  Name         = tailwings
-  Organization = banana-bender-net-test
-  Version      = 0
-  Status       =
-  Hostname     = <empty>
+? would you like to deploy postgressql for the app: (yes/no) no
 
-App will initially deploy to fra (Frankfurt, Germany) region
-
-Wrote config file fly.toml
+? would you like to deploy now : (yes/no) no 
 ```
-
 #### 9. Set the tailscale auth key in fly
 ```
-fly secrets set TAILSCALE_AUTH_KEY=[see step 4]
+flyctl secrets set TAILSCALE_AUTH_KEY=[see step 4]
 Secrets are staged for the first deployment
 ```
-
 #### 10. Deploy
 ```
-fly deploy
-Deploying tailwings
-==> Validating app configuration
---> Validating app configuration done
-Services
-UDP 41641 ⇢ 41641
-Remote builder fly-builder-dawn-pond-6587 ready
-==> Creating build context
---> Creating build context done
-==> Building image with Docker
-Sending build context to Docker daemon  17.28kB
-Step 1/16 : ARG TSFILE=tailscale_1.12.3_amd64.tgz
-[omitted]
---> Pushing image done
-Image: registry.fly.io/tailwings:deployment-1628948198
-Image size: 40 MB
-==> Creating release
-Release v0 created
-
-You can detach the terminal anytime without stopping the deployment
-Monitoring Deployment
-
-1 desired, 1 placed, 1 healthy, 0 unhealthy
---> v0 deployed successfully
+flyctl  deploy
 ```
-
 #### 11. Enable exit node in tailscale
 Wait for the node to appear in the tailscale machine overview.
 Enable exit routing for the nodes https://login.tailscale.com/admin/machines (see [tailscale docs](https://tailscale.com/kb/1103/exit-nodes/#step-2-allow-the-exit-node-from-the-admin-panel) on how to do it)
@@ -125,8 +97,8 @@ tailscale up --use-exit-node=fly-fra
 #### 13. Regions
 To add or remove regions just type:
 ```
-fly regions add hkg
-fly scale count 2
+flyctl regions add hkg
+flyctl scale count 2
 ```
 Wait for the node to appear in tailscale, confirm it to be a legit exit node (step 11), choose it in your client and in less than 5 minutes to access the internet in another place.
 Note: Scaling up also reinitializes the existing nodes. Just use the newly created one and delete the old.
@@ -138,13 +110,13 @@ https://user-images.githubusercontent.com/3500621/129452587-7ff90cd2-5e6d-4e39-9
 In case you want to stop:
 ```
 sudo systemctl stop tailscaled
-fly suspend
+flyctl suspend
 ```
 
 #### 15. remove
 In case you want to tear it down:
 ```
-fly orgs delete banana-bender-net
+flyctl orgs delete banana-bender-net
 ```
 I think there is no way to delete a tailscale org.
 
