@@ -130,6 +130,8 @@ flyctl orgs delete banana-bender-net
 I think there is no way to delete a tailscale org.
 
 #### 16. [Optional] Auto deployment using GitHub Action
+See <https://github.com/patte/fly-tailscale-exit/pull/21> for details.
+
 If you want to setup auto deployment, you'll need to fork this repo and add some environment variables to repo secrets.
 Also, you'll have to deploy to Fly.io at least once for this to work (scaled instance will update too!).
 
