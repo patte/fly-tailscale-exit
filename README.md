@@ -105,10 +105,10 @@ tailscale up --use-exit-node=fly-fra
 #### 13. Regions
 To add or remove regions just type:
 ```
-flyctl regions add hkg
-flyctl scale count 2
+flyctl scale count --region hkg 1
+flyctl scale count --region fra 1
 ```
-Wait for the node to appear in tailscale, confirm it to be a legit exit node (step 11), choose it in your client and in less than 5 minutes to access the internet in another place.
+Wait for the node to appear in tailscale, confirm it to be a legit exit node (step 11), choose it in your client boom! In less than 5 minutes you access the internet from another place.
 Note: Scaling up also reinitializes the existing nodes. Just use the newly created one and delete the old.
 Note: It seems not all fly regions have their own exit routers and some use another for egress traffic. This needs further investigation.
 
