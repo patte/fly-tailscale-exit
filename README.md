@@ -8,8 +8,8 @@ If you want to add tailscale to a fly.io application, follow this guide instead:
 
 Did you ever need a wormhole to another place in the internet? But you didn't trust the shady VPN providers with ads all over YouTube?
 Well, why not run it "yourself"? This guide helps you to set up a globally distributed and easily sharable VPN service for you and your friends.
-- Instantly scale up or down nodes arround the planet
-- Choose where your traffic should exit the internet from 20 locations.
+- Instantly scale up or down nodes around the planet
+- Choose where your traffic exits to the internet from 20 locations.
 - Enjoy solid connections worldwide
 - Bonus: the setup and the first 160GB of traffic each month are gratis
 
@@ -27,10 +27,10 @@ https://user-images.githubusercontent.com/3500621/129452512-616e7642-5a03-4037-9
 
 ## Setup
 
-#### 1. Have GitHub account
-Create an account on github if you don't have one already: https://github.com/signup
+#### 1. Have a GitHub account
+Create a GitHub account if you don't have one already: https://github.com/signup
 
-#### 2. Have GitHub organization
+#### 2. Have a GitHub organization
 Let's create a new github org for your network: https://github.com/organizations/plan
 - Choose a name for your network: eg. `banana-bender-net`
 - Plan: free
@@ -39,27 +39,27 @@ Let's create a new github org for your network: https://github.com/organizations
 Install tailscale on your machine(s):
 - Instal it on your notebook and mobile phone: https://tailscale.com/download
 - Login with github, choose the github organization created before (eg. `banana-bender-net`).
-- Check your network and keep this window around: https://login.tailscale.com/admin/machines
+- Check your network and keep this tab around: https://login.tailscale.com/admin/machines
 
 #### 4. Setup DNS in tailscale
 In order to use tailscale for exit traffic you need to configure a public DNS. Go to https://login.tailscale.com/admin/dns and add the nameservers of your choice (eg. cloudflare: `1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001`)
 
-#### 5. Create tailscale auth key
-Create an reusable auth key in tailscale: https://login.tailscale.com/admin/settings/authkeys
+#### 5. Create a tailscale auth key
+Create a reusable auth key in tailscale: https://login.tailscale.com/admin/settings/authkeys
 
 _A ephemeral key would be better for our use case, but it's restricted to IPv6 only by tailscale, which doesn't work so well as a VPN exit node._
 
 
-#### 6. Have fly.io account and cli
+#### 6. Have a fly.io account and cli
 Install the fly-cli to your machine and login with github: https://fly.io/docs/hands-on/installing/
 
-#### 7. Have fly.io organization
+#### 7. Have a fly.io organization
 - Create an org on fly (technically there is no requirement to name it the same).
 `flyctl orgs create banana-bender-net`
 - Go and enter your credit card at [https://fly.io/organizations/banana-bender-net](https://fly.io/organizations). It's only going to be charged if you use more than the [free resources](https://fly.io/docs/about/pricing/).
 
 #### 8. Setup fly
-Give the app the name you wan't. Don't deploy yet.
+Give the app the name you want. Don't deploy yet.
 ```
 git clone https://github.com/patte/fly-tailscale-exit.git
 
