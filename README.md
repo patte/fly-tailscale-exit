@@ -113,8 +113,13 @@ To add or remove regions just type:
 flyctl scale count 1 --region hkg
 flyctl scale count 1 --region fra
 
-or
+or:
 flyctl scale count 3 --region hkg,fra,ams
+
+or remove a machine explicitly:
+fly status
+fly machine stop $(machine_id)
+fly machine destroy $(machine_id)
 ```
 Wait for the node to appear in tailscale, confirm it to be a legit exit node (step 11), choose it in your client boom! In less than 5 minutes you access the internet from another place.<br/>
 Note: See the [fly docs about scaling] for further info: https://fly.io/docs/apps/scale-count/ <br/>
