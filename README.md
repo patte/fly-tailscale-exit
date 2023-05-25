@@ -125,7 +125,7 @@ fly machine destroy $(machine_id)
 Wait for the node to appear in tailscale, confirm it to be a legit exit node (step 11), choose it in your client boom! In less than 5 minutes you access the internet from another place.<br/>
 Note: See the [fly docs about scaling] for further info: https://fly.io/docs/apps/scale-count/ <br/>
 Note: Scaling up also reinitializes the existing nodes. Just use the newly created one and delete the old.<br/>
-Note: It seems not all fly regions have their own exit routers and some use another for egress traffic. This needs further investigation.
+Note: It seems that not all fly ips are correctly geo located or that not all fly regions have their own exit routers and some use another for egress traffic. This needs further investigation. See this [HN discussion](https://news.ycombinator.com/item?id=36064854) about it.
 
 https://user-images.githubusercontent.com/3500621/129452587-7ff90cd2-5e6d-4e39-9a91-548c498636f5.mp4
 
