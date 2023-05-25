@@ -11,7 +11,7 @@ Well, why not run it "yourself"? This guide helps you to set up a globally distr
 - Instantly scale up or down nodes around the planet
 - Choose where your traffic exits to the internet from 20 locations.
 - Enjoy solid connections worldwide
-- Bonus: the setup and the first 160GB of traffic each month are gratis
+- Bonus: the setup and the first 160GB of traffic each month are gratis. _Update_: a dedicated IPv4 to enable P2P communication (not via DERP) now [costs $2/mo](https://fly.io/docs/about/pricing/#anycast-ip-addresses)
 
 Sounds too good to be true. Well that's probably because it is. I compiled this setup as an excercise while exploring the capabilities of fly.io and tailscale. This is probably not what you should use as a serious VPN replacement. Go to one of the few trustworthy providers. For the reasons why this is a bad idea, read [below](#user-content-why-this-probably-is-a-bad-idea).
 
@@ -85,7 +85,17 @@ flyctl secrets set TAILSCALE_AUTH_KEY=[see step 4]
 Secrets are staged for the first deployment
 ```
 
-#### 10. Deploy
+#### 10 Deploy (and IP and scale)
+_Update_: fly.io does [not automatically allocate a dedicated IPv4 per app on the first deployment anymore](https://community.fly.io/t/announcement-shared-anycast-ipv4/9384). You have three options:
+- Run the command below to add a dedicated IPv4 (recommended)
+- Run `flyctl ips allocate-v6`. Direct connections to the node will only work if your local machine has a global IPv6. 
+- Remove the `services.ports` section from fly.toml. This has the disadvantage that your node is never going to be directly reachable and all your traffic is routed via tailscale DERP servers.
+```
+flyctl ips allocate-v4
+? Looks like you're accessing a paid feature. Dedicated IPv4 addresses now costs $2/mo. Are you ok with this?
+```
+
+Deploy
 ```
 flyctl  deploy
 ```
