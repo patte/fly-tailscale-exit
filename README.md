@@ -89,6 +89,11 @@ Secrets are staged for the first deployment
 flyctl  deploy
 ```
 
+At the time of writing fly deploys two machines per default. For this setup you probably want 1 machine per region. Run the following to remove the second machine:
+```
+flyctl scale count 1
+```
+
 #### 11. Enable exit node in tailscale
 Wait for the node to appear in the tailscale machine overview.
 Enable exit routing for the nodes https://login.tailscale.com/admin/machines (see [tailscale docs](https://tailscale.com/kb/1103/exit-nodes/#step-2-allow-the-exit-node-from-the-admin-panel) on how to do it)
@@ -105,11 +110,15 @@ tailscale up --use-exit-node=fly-fra
 #### 13. Regions
 To add or remove regions just type:
 ```
-flyctl scale count --region hkg 1
-flyctl scale count --region fra 1
+flyctl scale count 1 --region hkg
+flyctl scale count 1 --region fra
+
+or
+flyctl scale count 3 --region hkg,fra,ams
 ```
-Wait for the node to appear in tailscale, confirm it to be a legit exit node (step 11), choose it in your client boom! In less than 5 minutes you access the internet from another place.
-Note: Scaling up also reinitializes the existing nodes. Just use the newly created one and delete the old.
+Wait for the node to appear in tailscale, confirm it to be a legit exit node (step 11), choose it in your client boom! In less than 5 minutes you access the internet from another place.<br/>
+Note: See the [fly docs about scaling] for further info: https://fly.io/docs/apps/scale-count/ <br/>
+Note: Scaling up also reinitializes the existing nodes. Just use the newly created one and delete the old.<br/>
 Note: It seems not all fly regions have their own exit routers and some use another for egress traffic. This needs further investigation.
 
 https://user-images.githubusercontent.com/3500621/129452587-7ff90cd2-5e6d-4e39-9a91-548c498636f5.mp4
