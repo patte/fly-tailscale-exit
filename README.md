@@ -86,19 +86,16 @@ Secrets are staged for the first deployment
 ```
 
 #### 10 Deploy (and IP and scale)
-_Update_: fly.io does [not automatically allocate a dedicated IPv4 per app on the first deployment anymore](https://community.fly.io/t/announcement-shared-anycast-ipv4/9384). You have three options:
-- Run the command below to add a dedicated IPv4 (recommended)
-- Run `flyctl ips allocate-v6`. Direct connections to the node will only work if your local machine has a global IPv6. 
-- Remove the `services.ports` section from fly.toml. This has the disadvantage that your node is never going to be directly reachable and all your traffic is routed via tailscale DERP servers.
-```
-flyctl ips allocate-v4
-? Looks like you're accessing a paid feature. Dedicated IPv4 addresses now costs $2/mo. Are you ok with this?
-```
 
-Deploy
 ```
 flyctl  deploy
+? Would you like to allocate a dedicated ipv4 address now? Yes
 ```
+_Update_: fly.io does [not automatically allocate a dedicated IPv4 per app on the first deployment anymore](https://community.fly.io/t/announcement-shared-anycast-ipv4/9384). You want a dedicated IPv4 to be able to expose the UDP port on it and thus enable peer-to-peer connections (not via tailscale DERP). You have three options:
+- Say yes during the initial deploy.
+- Run the command `flyctl ips allocate-v4` to add a dedicated IPv4 later
+- Run `flyctl ips allocate-v6`. Direct connections to the node will only work if your local machine has a global IPv6. (not tested) 
+- Remove the `services.ports` section from fly.toml. This has the disadvantage that your node is never going to be directly reachable and all your traffic is routed via tailscale DERP servers.
 
 At the time of writing fly deploys two machines per default. For this setup you probably want 1 machine per region. Run the following to remove the second machine:
 ```
