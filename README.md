@@ -15,6 +15,7 @@ Well, why not run it "yourself"? This guide helps you to set up a globally distr
 
 Sounds too good to be true. Well that's probably because it is. I compiled this setup as an excercise while exploring the capabilities of fly.io and tailscale. This is probably not what you should use as a serious VPN replacement. Go to one of the few trustworthy providers. For the reasons why this is a bad idea, read [below](#user-content-why-this-probably-is-a-bad-idea).
 
+Checkout gbraad's fork if you want to include squid, dante and gitpod https://github.com/spotsnel/tailscale-tailwings 
 
 ![Screenshot](https://user-images.githubusercontent.com/3500621/129452513-52133b60-02b8-4ec8-9605-0a6e3a089f9e.png)
 
