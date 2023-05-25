@@ -9,7 +9,7 @@ If you want to add tailscale to a fly.io application, follow this guide instead:
 Did you ever need a wormhole to another place in the internet? But you didn't trust the shady VPN providers with ads all over YouTube?
 Well, why not run it "yourself"? This guide helps you to set up a globally distributed and easily sharable VPN service for you and your friends.
 - Instantly scale up or down nodes around the planet
-- Choose where your traffic exits to the internet from 20 locations.
+- Choose where your traffic exits to the internet from [30+ locations](https://fly.io/docs/reference/regions/).
 - Enjoy solid connections worldwide
 - Bonus: the setup and the first 160GB of traffic each month are gratis. _Update_: a dedicated IPv4 to enable P2P communication (not via DERP) now [costs $2/mo](https://fly.io/docs/about/pricing/#anycast-ip-addresses)
 
