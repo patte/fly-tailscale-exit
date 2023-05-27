@@ -88,7 +88,7 @@ Secrets are staged for the first deployment
 #### 10 Deploy (and IP and scale)
 
 ```
-flyctl  deploy
+flyctl deploy
 ? Would you like to allocate a dedicated ipv4 address now? Yes
 ```
 _Update_: fly.io does [not automatically allocate a dedicated IPv4 per app on the first deployment anymore](https://community.fly.io/t/announcement-shared-anycast-ipv4/9384). You want a dedicated IPv4 to be able to expose the UDP port on it and thus enable peer-to-peer connections (not via tailscale DERP). You have three options:
@@ -136,22 +136,34 @@ Note: It seems that not all fly ips are correctly geo located or that not all fl
 
 https://user-images.githubusercontent.com/3500621/129452587-7ff90cd2-5e6d-4e39-9a91-548c498636f5.mp4
 
-#### 14. halt
+#### Update
+```
+git pull
+fly deploy --strategy immediate
+```
+Then manually remove the old nodes in tailscale and enable exit node in tailscale.
+
+
+Checkout [this fork](https://github.com/StepBroBD/Tailscale-on-Fly.io/tree/stepbrobd-pr-feat-auto-deploy) for an approach to auto deploy to fly with a github action (including managing tailscale nodes with a python script).
+
+
+#### Halt
 In case you want to stop:
 ```
 sudo systemctl stop tailscaled
 flyctl suspend
 ```
 
-#### 15. remove
+#### Remove
 In case you want to tear it down:
 ```
 flyctl orgs delete banana-bender-net
 ```
-I think there is no way to delete a tailscale org.
+[Request the deletion](https://tailscale.com/contact/support/?type=tailnetdeletion) of the tailnet.
+
 
 ## Invite your friends
-All you need to do to invite friends into your network is to invite them to the github organization, have them install tailscale and login with github. They immediately see the available exit nodes and can use whichever they please. Easiest VPN setup ever!!
+All you need to do to invite friends into your network is to invite them to the github organization, have them install tailscale and login with github. They immediately see the available exit nodes and can use whichever they please.
 
 
 ## Why this probably is a bad idea
