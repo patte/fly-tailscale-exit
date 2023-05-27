@@ -166,14 +166,14 @@ flyctl orgs delete banana-bender-net
 To auto approve the fly machines as exit-nodes in tailscale. Add the following ACLs:
 ```json
 {
-	"tagOwners": {
-		"tag:fly-exit": [
-			"YOUR-USERNAME@github", // user creating the tailscale auth key (step 5)
-		],
-	},
-	"autoApprovers": {
-		"exitNode": ["tag:fly-exit"],
-	},
+  "tagOwners": {
+    "tag:fly-exit": [
+      "YOUR-USERNAME@github", // user creating the tailscale auth key (step 5)
+    ],
+  },
+  "autoApprovers": {
+    "exitNode": ["tag:fly-exit"],
+  },
 }
 ```
 Then uncomment `--advertise-tags=tag:fly-exit` (and `\` on the previous line) in [start.sh](start.sh) and deploy `fly deploy --strategy immediate`.
