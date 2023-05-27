@@ -162,6 +162,23 @@ flyctl orgs delete banana-bender-net
 [Request the deletion](https://tailscale.com/contact/support/?type=tailnetdeletion) of the tailnet.
 
 
+### Optional: Auto approve exit nodes
+To auto approve the fly machines as exit-nodes in tailscale. Add the following ACLs:
+```json
+{
+	"tagOwners": {
+		"tag:fly-exit": [
+			"YOUR-USERNAME@github", // user creating the tailscale auth key (step 5)
+		],
+	},
+	"autoApprovers": {
+		"exitNode": ["tag:fly-exit"],
+	},
+}
+```
+Then uncomment `--advertise-tags=tag:fly-exit` (and `\` on the previous line) in [start.sh](start.sh) and deploy `fly deploy --strategy immediate`.
+
+
 ## Invite your friends
 All you need to do to invite friends into your network is to invite them to the github organization, have them install tailscale and login with github. They immediately see the available exit nodes and can use whichever they please.
 
