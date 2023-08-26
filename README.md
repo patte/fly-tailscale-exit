@@ -48,8 +48,6 @@ In order to use tailscale for exit traffic you need to configure a public DNS. G
 #### 5. Create a tailscale auth key
 Create a reusable auth key in tailscale: https://login.tailscale.com/admin/settings/authkeys
 
-_A ephemeral key would be better for our use case, but it's restricted to IPv6 only by tailscale, which doesn't work so well as a VPN exit node._
-
 
 #### 6. Have a fly.io account and cli
 Install the fly-cli to your machine and login with github: https://fly.io/docs/hands-on/installing/
