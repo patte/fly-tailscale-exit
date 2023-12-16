@@ -38,7 +38,7 @@ Let's create a new github org for your network: https://github.com/organizations
 
 #### 3. Have tailscale
 Install tailscale on your machine(s):
-- Instal it on your notebook and mobile phone: https://tailscale.com/download
+- Install it on your notebook and mobile phone: https://tailscale.com/download
 - Login with github, choose the github organization created before (eg. `banana-bender-net`).
 - Check your network and keep this tab around: https://login.tailscale.com/admin/machines
 
