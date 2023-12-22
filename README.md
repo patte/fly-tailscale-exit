@@ -16,7 +16,7 @@ Well, why not run it "yourself"? This guide helps you to set up a globally distr
 - Instantly scale up or down nodes around the planet
 - Choose where your traffic exits to the internet from [30+ locations](https://fly.io/docs/reference/regions/).
 - Enjoy solid connections worldwide
-- ~~Bonus: the setup and the first 160GB of traffic each month are gratis.~~ _Update_: a dedicated IPv4 to enable P2P communication (not via DERP) now [costs $2/mo](https://fly.io/docs/about/pricing/#anycast-ip-addresses). _Update 2_: Fly.io's free tier (160/140GB) isn't meant for use by proxies. Your fly plan might get [upgraded to a $10/month “Advanced” plan](https://community.fly.io/t/4896). Thanks @ignoramous for the heads up.
+- ~~Bonus: the setup and the first 160GB of traffic each month are gratis.~~ _Update_: a dedicated IPv4 to enable P2P communication (not via DERP) now [costs $2/mo](https://fly.io/docs/about/pricing/#anycast-ip-addresses). _Update 2_: Fly.io's free tier (160/140GB) isn't meant for use by proxies. Your fly plan might get [upgraded to a $10/month “Advanced” plan](https://community.fly.io/t/4896). Thanks [@ignoramous](https://github.com/patte/fly-tailscale-exit/issues/37) for the heads up.
 
 
 Sounds too good to be true. Well that's probably because it is. I compiled this setup as an excercise while exploring the capabilities of fly.io and tailscale. This is probably not what you should use as a serious VPN replacement. Go to one of the few trustworthy providers. For the reasons why this is a bad idea, read [below](#user-content-why-this-probably-is-a-bad-idea).
