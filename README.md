@@ -62,7 +62,7 @@ Install the fly-cli to your machine and login with github: https://fly.io/docs/h
 
 #### 7. Have a fly.io organization
 - Create an org on fly (technically there is no requirement to name it the same).
-`flyctl orgs create banana-bender-net`
+`fly orgs create banana-bender-net`
 - Go and enter your credit card at [https://fly.io/organizations/banana-bender-net](https://fly.io/organizations). It's only going to be charged if you use more than the [free resources](https://fly.io/docs/about/pricing/).
 
 #### 8. Setup fly
@@ -72,7 +72,7 @@ git clone https://github.com/patte/fly-tailscale-exit.git
 
 cd fly-tailscale-exit
 
-flyctl launch
+fly launch
 
 ? fly.toml file already exits would you like copy its configuration : (yes/no) yes
 
@@ -87,28 +87,28 @@ flyctl launch
 
 #### 9. Set the tailscale auth key in fly
 ```
-flyctl secrets set TAILSCALE_AUTH_KEY=[see step 4]
+fly secrets set TAILSCALE_AUTH_KEY=[see step 4]
 Secrets are staged for the first deployment
 ```
 
 #### 10 Deploy (and IP and scale)
 
 ```
-flyctl deploy
+fly deploy
 ? Would you like to allocate a dedicated ipv4 address now? Yes
 ```
 _Update_: fly.io does [not automatically allocate a dedicated IPv4 per app on the first deployment anymore](https://community.fly.io/t/announcement-shared-anycast-ipv4/9384). You want a dedicated IPv4 to be able to expose the UDP port on it and thus enable peer-to-peer connections (not via tailscale DERP). You have three options:
 - Say yes during the initial deploy.
-- Run the command `flyctl ips allocate-v4` to add a dedicated IPv4 later
-- Run `flyctl ips allocate-v6`. Direct connections to the node will only work if your local machine has a global IPv6. (not tested) 
+- Run the command `fly ips allocate-v4` to add a dedicated IPv4 later
+- Run `fly ips allocate-v6`. Direct connections to the node will only work if your local machine has a global IPv6. (not tested) 
 - Remove the `services.ports` section from fly.toml. This has the disadvantage that your node is never going to be directly reachable and all your traffic is routed via tailscale DERP servers.
 
 At the time of writing fly deploys two machines per default. For this setup you probably want 1 machine per region. Run the following to remove the second machine:
 ```
-flyctl scale count 1
+fly scale count 1
 ```
 
-You can check the logs with `flyctl logs`. If you encounter `Out of memory: Killed process 526 (tailscaled)` you might want to give the machine more memory with: `fly scale memory 512`.
+You can check the logs with `fly logs`. If you encounter `Out of memory: Killed process 526 (tailscaled)` you might want to give the machine more memory with: `fly scale memory 512`.
 
 #### 11. Enable exit node in tailscale
 Wait for the node to appear in the tailscale machine overview.
@@ -126,11 +126,11 @@ tailscale up --use-exit-node=fly-fra
 #### 13. Regions
 To add or remove regions just type:
 ```
-flyctl scale count 1 --region hkg
-flyctl scale count 1 --region fra
+fly scale count 1 --region hkg
+fly scale count 1 --region fra
 
 or:
-flyctl scale count 3 --region hkg,fra,ams
+fly scale count 3 --region hkg,fra,ams
 
 or remove a machine explicitly:
 fly status
@@ -159,13 +159,13 @@ Checkout [this fork](https://github.com/StepBroBD/Tailscale-on-Fly.io/tree/stepb
 In case you want to stop:
 ```
 sudo systemctl stop tailscaled
-flyctl suspend
+fly suspend
 ```
 
 #### Remove
 In case you want to tear it down:
 ```
-flyctl orgs delete banana-bender-net
+fly orgs delete banana-bender-net
 ```
 [Request the deletion](https://tailscale.com/contact/support/?type=tailnetdeletion) of the tailnet.
 
