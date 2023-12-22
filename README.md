@@ -108,6 +108,8 @@ At the time of writing fly deploys two machines per default. For this setup you 
 flyctl scale count 1
 ```
 
+You can check the logs with `flyctl logs`. If you encounter `Out of memory: Killed process 526 (tailscaled)` you might want to give the machine more memory with: `fly scale memory 512`.
+
 #### 11. Enable exit node in tailscale
 Wait for the node to appear in the tailscale machine overview.
 Enable exit routing for the nodes https://login.tailscale.com/admin/machines (see [tailscale docs](https://tailscale.com/kb/1103/exit-nodes/#step-2-allow-the-exit-node-from-the-admin-panel) on how to do it)
@@ -142,7 +144,7 @@ Note: It seems that not all fly ips are correctly geo located or that not all fl
 
 https://user-images.githubusercontent.com/3500621/129452587-7ff90cd2-5e6d-4e39-9a91-548c498636f5.mp4
 
-#### Update
+#### Update tailscale
 ```
 git pull
 fly deploy --strategy immediate
