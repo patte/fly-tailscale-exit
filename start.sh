@@ -22,17 +22,48 @@ ip6tables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 
 # Check if using OAuth or Auth Key
 if [ -n "$TAILSCALE_OAUTH_CLIENT_ID" ] && [ -n "$TAILSCALE_OAUTH_SECRET" ]; then
-    # Use OAuth authentication
+    echo "Using OAuth authentication to generate an auth key"
+    
+    # Get an access token using the OAuth client credentials
+    OAUTH_TOKEN_RESPONSE=$(wget --quiet --output-document=- --header="Content-Type: application/x-www-form-urlencoded" \
+                           --post-data="client_id=${TAILSCALE_OAUTH_CLIENT_ID}&client_secret=${TAILSCALE_OAUTH_SECRET}" \
+                           https://api.tailscale.com/api/v2/oauth/token)
+    
+    # Extract the access token
+    ACCESS_TOKEN=$(echo $OAUTH_TOKEN_RESPONSE | grep -o '"access_token":"[^"]*' | cut -d'"' -f4)
+    
+    if [ -z "$ACCESS_TOKEN" ]; then
+        echo "Failed to get access token from Tailscale API"
+        exit 1
+    fi
+    
+    # Generate a new auth key using the access token
+    AUTH_KEY_RESPONSE=$(wget --quiet --output-document=- --header="Content-Type: application/json" \
+                        --header="Authorization: Bearer ${ACCESS_TOKEN}" \
+                        --post-data='{"capabilities":{"devices":{"create":{"reusable":true,"ephemeral":false,"preauthorized":true,"tags":["tag:fly-exit"]}}}}' \
+                        https://api.tailscale.com/api/v2/tailnet/-/keys)
+    
+    # Extract the auth key
+    AUTH_KEY=$(echo $AUTH_KEY_RESPONSE | grep -o '"key":"[^"]*' | cut -d'"' -f4)
+    
+    if [ -z "$AUTH_KEY" ]; then
+        echo "Failed to generate auth key from Tailscale API"
+        exit 1
+    fi
+    
+    echo "Successfully generated auth key using OAuth"
+    
+    # Use the generated auth key
     /app/tailscale up \
-        --oauth-client-id=${TAILSCALE_OAUTH_CLIENT_ID} \
-        --oauth-client-secret=${TAILSCALE_OAUTH_SECRET} \
+        --auth-key=${AUTH_KEY} \
         --hostname=fly-${FLY_REGION} \
         --advertise-exit-node #\
         #--advertise-tags=tag:fly-exit # requires ACL tagOwners
 else
-    # Use Auth Key authentication
+    # Use Auth Key authentication directly
+    echo "Using Auth Key authentication"
     /app/tailscale up \
-        --authkey=${TAILSCALE_AUTH_KEY} \
+        --auth-key=${TAILSCALE_AUTH_KEY} \
         --hostname=fly-${FLY_REGION} \
         --advertise-exit-node #\
         #--advertise-tags=tag:fly-exit # requires ACL tagOwners
