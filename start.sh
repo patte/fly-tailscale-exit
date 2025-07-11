@@ -20,11 +20,23 @@ ip6tables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
     #--tun=userspace-networking
     #--socks5-server=localhost:1055
 
-/app/tailscale up \
-    --authkey=${TAILSCALE_AUTH_KEY} \
-    --hostname=fly-${FLY_REGION} \
-    --advertise-exit-node #\
-    #--advertise-tags=tag:fly-exit # requires ACL tagOwners
+# Check if using OAuth or Auth Key
+if [ -n "$TAILSCALE_OAUTH_CLIENT_ID" ] && [ -n "$TAILSCALE_OAUTH_SECRET" ]; then
+    # Use OAuth authentication
+    /app/tailscale up \
+        --oauth-client-id=${TAILSCALE_OAUTH_CLIENT_ID} \
+        --oauth-client-secret=${TAILSCALE_OAUTH_SECRET} \
+        --hostname=fly-${FLY_REGION} \
+        --advertise-exit-node #\
+        #--advertise-tags=tag:fly-exit # requires ACL tagOwners
+else
+    # Use Auth Key authentication
+    /app/tailscale up \
+        --authkey=${TAILSCALE_AUTH_KEY} \
+        --hostname=fly-${FLY_REGION} \
+        --advertise-exit-node #\
+        #--advertise-tags=tag:fly-exit # requires ACL tagOwners
+fi
 
 echo "Tailscale started. Let's go!"
 sleep infinity

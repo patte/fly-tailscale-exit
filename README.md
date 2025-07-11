@@ -51,10 +51,24 @@ Install tailscale on your machine(s):
 #### 4. Setup DNS in tailscale
 In order to use tailscale for exit traffic you need to configure a public DNS. Go to https://login.tailscale.com/admin/dns and add the nameservers of your choice (eg. cloudflare: `1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001`)
 
-#### 5. Create a tailscale auth key
+#### 5. Authentication Options
+
+You have two options for authenticating your Tailscale nodes:
+
+##### Option A: Create a tailscale auth key (traditional method)
 Create a reusable auth key in tailscale: https://login.tailscale.com/admin/settings/authkeys
 
 _A ephemeral key would be better for our use case, but it's restricted to IPv6 only by tailscale, which doesn't work so well as a VPN exit node._
+
+##### Option B: Create an OAuth client (recommended)
+1. Go to your Tailscale admin console: https://login.tailscale.com/admin/settings/oauth
+2. Create a new OAuth client with the following scopes:
+   - `devices:core`
+   - `auth_keys:write`
+3. Apply the tag `tag:fly-exit` to the OAuth client
+4. Save the client ID and secret for use in step 9
+
+Using OAuth is recommended as it provides more fine-grained access control and is the modern authentication method for Tailscale.
 
 
 #### 6. Have a fly.io account and cli
@@ -85,9 +99,17 @@ fly launch
 ? would you like to deploy now : (yes/no) no
 ```
 
-#### 9. Set the tailscale auth key in fly
+#### 9. Set the Tailscale authentication credentials in fly
+
+##### If using Auth Key (Option A from step 5):
 ```
-fly secrets set TAILSCALE_AUTH_KEY=[see step 4]
+fly secrets set TAILSCALE_AUTH_KEY=[your auth key]
+Secrets are staged for the first deployment
+```
+
+##### If using OAuth (Option B from step 5):
+```
+fly secrets set TAILSCALE_OAUTH_CLIENT_ID=[your OAuth client ID] TAILSCALE_OAUTH_SECRET=[your OAuth client secret]
 Secrets are staged for the first deployment
 ```
 
