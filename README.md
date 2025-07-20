@@ -61,6 +61,7 @@ Create an auth key in tailscale: https://login.tailscale.com/admin/settings/auth
 Choose the following options:
 - `reusable` (for more than one device)
 - `ephemeral` (autoremove if going offline)
+- `pre-approved` (automatically approved)
 
 ##### Option B: Create an OAuth client (recommended)
 1. Go to your Tailscale admin console: https://login.tailscale.com/admin/settings/oauth
