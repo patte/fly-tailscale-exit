@@ -22,7 +22,7 @@ ip6tables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 
 # Check if using OAuth or Auth Key
 if [ -n "$TAILSCALE_OAUTH_CLIENT_ID" ] && [ -n "$TAILSCALE_OAUTH_SECRET" ]; then
-    echo "Using OAuth authentication to generate an auth key"
+    echo "Using OAuth to generate an auth key"
     
     # Get an access token using the OAuth client credentials
     OAUTH_TOKEN_RESPONSE=$(wget --quiet --output-document=- --header="Content-Type: application/x-www-form-urlencoded" \
@@ -57,8 +57,7 @@ if [ -n "$TAILSCALE_OAUTH_CLIENT_ID" ] && [ -n "$TAILSCALE_OAUTH_SECRET" ]; then
     /app/tailscale up \
         --auth-key=${AUTH_KEY} \
         --hostname=fly-${FLY_REGION} \
-        --advertise-exit-node #\
-        #--advertise-tags=tag:fly-exit # requires ACL tagOwners
+        --advertise-exit-node
 else
     # Use Auth Key authentication directly
     echo "Using Auth Key authentication"

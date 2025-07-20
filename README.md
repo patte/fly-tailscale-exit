@@ -63,7 +63,7 @@ _A ephemeral key would be better for our use case, but it's restricted to IPv6 o
 ##### Option B: Create an OAuth client (recommended)
 1. Go to your Tailscale admin console: https://login.tailscale.com/admin/settings/oauth
 2. Create a new OAuth client with the following scopes:
-   - `devices:core`
+   - `devices:core:write`
    - `auth_keys:write`
 3. Apply the tag `tag:fly-exit` to the OAuth client
 4. Save the client ID and secret for use in step 9
