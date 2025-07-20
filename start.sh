@@ -40,7 +40,7 @@ if [ -n "$TAILSCALE_OAUTH_CLIENT_ID" ] && [ -n "$TAILSCALE_OAUTH_SECRET" ]; then
     # Generate a new auth key using the access token
     AUTH_KEY_RESPONSE=$(wget --quiet --output-document=- --header="Content-Type: application/json" \
                         --header="Authorization: Bearer ${ACCESS_TOKEN}" \
-                        --post-data='{"capabilities":{"devices":{"create":{"reusable":true,"ephemeral":false,"preauthorized":true,"tags":["tag:fly-exit"]}}}}' \
+                        --post-data='{"capabilities":{"devices":{"create":{"reusable":true,"ephemeral":true,"preauthorized":true,"tags":["tag:fly-exit"]}}}}' \
                         https://api.tailscale.com/api/v2/tailnet/-/keys)
     
     # Extract the auth key
