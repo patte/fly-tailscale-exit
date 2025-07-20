@@ -10,9 +10,6 @@ kill_timeout = "5s"
 
 [env]
   PORT = "41641"
-  # create a reusable auth key and set it:
-  # flyctl secrets set TAILSCALE_AUTH_KEY=tskey-...
-  # ephemeral keys are hardly working for use as exit node as they are ipv6 only
 
 [[services]]
   protocol = "udp"
