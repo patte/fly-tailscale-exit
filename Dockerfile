@@ -1,4 +1,4 @@
-ARG TSVERSION=1.46.1
+ARG TSVERSION=1.84.0
 ARG TSFILE=tailscale_${TSVERSION}_amd64.tgz
 
 FROM alpine:latest as tailscale
@@ -9,9 +9,9 @@ RUN wget https://pkgs.tailscale.com/stable/${TSFILE} && \
   tar xzf ${TSFILE} --strip-components=1
 COPY . ./
 
-
 FROM alpine:latest
-RUN apk update && apk add ca-certificates iptables ip6tables iproute2 && rm -rf /var/cache/apk/*
+RUN apk update && apk add ca-certificates iptables ip6tables \
+  && rm -rf /var/cache/apk/*
 
 # creating directories for tailscale
 RUN mkdir -p /var/run/tailscale

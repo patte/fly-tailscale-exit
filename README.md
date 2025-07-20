@@ -6,12 +6,18 @@ fly-tailscale-exit
 This repo shows how to run tailscale on fly, specifically to run exit nodes.
 If you want to add tailscale to a fly.io application, follow this guide instead: https://tailscale.com/kb/1132/flydotio/
 
+⚠️ In September 2023 [Tailscale](https://tailscale.com/blog/mullvad-integration) and [Mullvad](https://mullvad.net/en/blog/tailscale-has-partnered-with-mullvad) announced to partner up: for $5/month you can use a mullvad exit node from up to 5 tailscale nodes. This is great news and I'd recommend to use this instead of the setup described here. Follow [this guide](https://tailscale.com/kb/1258/mullvad-exit-nodes) to set it up.
+
+
+## Intro
+
 Did you ever need a wormhole to another place in the internet? But you didn't trust the shady VPN providers with ads all over YouTube?
 Well, why not run it "yourself"? This guide helps you to set up a globally distributed and easily sharable VPN service for you and your friends.
 - Instantly scale up or down nodes around the planet
 - Choose where your traffic exits to the internet from [30+ locations](https://fly.io/docs/reference/regions/).
 - Enjoy solid connections worldwide
-- Bonus: the setup and the first 160GB of traffic each month are gratis. _Update_: a dedicated IPv4 to enable P2P communication (not via DERP) now [costs $2/mo](https://fly.io/docs/about/pricing/#anycast-ip-addresses)
+- ~~Bonus: the setup and the first 160GB of traffic each month are gratis.~~ _Update_: a dedicated IPv4 to enable P2P communication (not via DERP) now [costs $2/mo](https://fly.io/docs/about/pricing/#anycast-ip-addresses). _Update 2_: Fly.io's free tier (160/140GB) isn't meant for use by proxies. Your fly plan might get [upgraded to a $10/month “Advanced” plan](https://community.fly.io/t/4896). Thanks [@ignoramous](https://github.com/patte/fly-tailscale-exit/issues/37) for the heads up.
+
 
 Sounds too good to be true. Well that's probably because it is. I compiled this setup as an excercise while exploring the capabilities of fly.io and tailscale. This is probably not what you should use as a serious VPN replacement. Go to one of the few trustworthy providers. For the reasons why this is a bad idea, read [below](#user-content-why-this-probably-is-a-bad-idea).
 
@@ -38,23 +44,36 @@ Let's create a new github org for your network: https://github.com/organizations
 
 #### 3. Have tailscale
 Install tailscale on your machine(s):
-- Instal it on your notebook and mobile phone: https://tailscale.com/download
+- Install it on your notebook and mobile phone: https://tailscale.com/download
 - Login with github, choose the github organization created before (eg. `banana-bender-net`).
 - Check your network and keep this tab around: https://login.tailscale.com/admin/machines
 
 #### 4. Setup DNS in tailscale
 In order to use tailscale for exit traffic you need to configure a public DNS. Go to https://login.tailscale.com/admin/dns and add the nameservers of your choice (eg. cloudflare: `1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001`)
 
-#### 5. Create a tailscale auth key
+#### 5. Authentication Options
+
+You have two options for authenticating your Tailscale nodes:
+
+##### Option A: Create a tailscale auth key (traditional method)
 Create a reusable auth key in tailscale: https://login.tailscale.com/admin/settings/authkeys
 
+##### Option B: Create an OAuth client (recommended)
+1. Go to your Tailscale admin console: https://login.tailscale.com/admin/settings/oauth
+2. Create a new OAuth client with the following scopes:
+   - `devices:core:write`
+   - `auth_keys:write`
+3. Apply the tag `tag:fly-exit` to the OAuth client
+4. Save the client ID and secret for use in step 9
+
+Using OAuth is recommended as it provides more fine-grained access control and is the modern authentication method for Tailscale.
 
 #### 6. Have a fly.io account and cli
 Install the fly-cli to your machine and login with github: https://fly.io/docs/hands-on/installing/
 
 #### 7. Have a fly.io organization
 - Create an org on fly (technically there is no requirement to name it the same).
-`flyctl orgs create banana-bender-net`
+`fly orgs create banana-bender-net`
 - Go and enter your credit card at [https://fly.io/organizations/banana-bender-net](https://fly.io/organizations). It's only going to be charged if you use more than the [free resources](https://fly.io/docs/about/pricing/).
 
 #### 8. Setup fly
@@ -64,7 +83,7 @@ git clone https://github.com/patte/fly-tailscale-exit.git
 
 cd fly-tailscale-exit
 
-flyctl launch
+fly launch
 
 ? fly.toml file already exits would you like copy its configuration : (yes/no) yes
 
@@ -77,28 +96,38 @@ flyctl launch
 ? would you like to deploy now : (yes/no) no
 ```
 
-#### 9. Set the tailscale auth key in fly
+#### 9. Set the Tailscale authentication credentials in fly
+
+##### If using Auth Key (Option A from step 5):
 ```
-flyctl secrets set TAILSCALE_AUTH_KEY=[see step 4]
+fly secrets set TAILSCALE_AUTH_KEY=[your auth key]
+Secrets are staged for the first deployment
+```
+
+##### If using OAuth (Option B from step 5):
+```
+fly secrets set TAILSCALE_OAUTH_CLIENT_ID=[your OAuth client ID] TAILSCALE_OAUTH_SECRET=[your OAuth client secret]
 Secrets are staged for the first deployment
 ```
 
 #### 10 Deploy (and IP and scale)
 
 ```
-flyctl deploy
+fly deploy
 ? Would you like to allocate a dedicated ipv4 address now? Yes
 ```
 _Update_: fly.io does [not automatically allocate a dedicated IPv4 per app on the first deployment anymore](https://community.fly.io/t/announcement-shared-anycast-ipv4/9384). You want a dedicated IPv4 to be able to expose the UDP port on it and thus enable peer-to-peer connections (not via tailscale DERP). You have three options:
 - Say yes during the initial deploy.
-- Run the command `flyctl ips allocate-v4` to add a dedicated IPv4 later
-- Run `flyctl ips allocate-v6`. Direct connections to the node will only work if your local machine has a global IPv6. (not tested) 
+- Run the command `fly ips allocate-v4` to add a dedicated IPv4 later
+- Run `fly ips allocate-v6`. Direct connections to the node will only work if your local machine has a global IPv6. (not tested) 
 - Remove the `services.ports` section from fly.toml. This has the disadvantage that your node is never going to be directly reachable and all your traffic is routed via tailscale DERP servers.
 
 At the time of writing fly deploys two machines per default. For this setup you probably want 1 machine per region. Run the following to remove the second machine:
 ```
-flyctl scale count 1
+fly scale count 1
 ```
+
+You can check the logs with `fly logs`. If you encounter `Out of memory: Killed process 526 (tailscaled)` you might want to give the machine more memory with: `fly scale memory 512`.
 
 #### 11. Enable exit node in tailscale
 Wait for the node to appear in the tailscale machine overview.
@@ -116,11 +145,11 @@ tailscale up --use-exit-node=fly-fra
 #### 13. Regions
 To add or remove regions just type:
 ```
-flyctl scale count 1 --region hkg
-flyctl scale count 1 --region fra
+fly scale count 1 --region hkg
+fly scale count 1 --region fra
 
 or:
-flyctl scale count 3 --region hkg,fra,ams
+fly scale count 3 --region hkg,fra,ams
 
 or remove a machine explicitly:
 fly status
@@ -134,7 +163,7 @@ Note: It seems that not all fly ips are correctly geo located or that not all fl
 
 https://user-images.githubusercontent.com/3500621/129452587-7ff90cd2-5e6d-4e39-9a91-548c498636f5.mp4
 
-#### Update
+#### Update tailscale
 ```
 git pull
 fly deploy --strategy immediate
@@ -149,13 +178,13 @@ Checkout [this fork](https://github.com/StepBroBD/Tailscale-on-Fly.io/tree/stepb
 In case you want to stop:
 ```
 sudo systemctl stop tailscaled
-flyctl suspend
+fly suspend
 ```
 
 #### Remove
 In case you want to tear it down:
 ```
-flyctl orgs delete banana-bender-net
+fly orgs delete banana-bender-net
 ```
 [Request the deletion](https://tailscale.com/contact/support/?type=tailnetdeletion) of the tailnet.
 
