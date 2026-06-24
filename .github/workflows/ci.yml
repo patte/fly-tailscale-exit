@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Shellcheck scripts
-        run: shellcheck -s sh start.sh healthz
+        run: shellcheck -s sh start.sh healthz .github/scripts/smoke-test.sh
 
       - name: Hadolint Dockerfile
         # Run hadolint's image directly (digest-pinned) rather than the
@@ -39,23 +39,4 @@ jobs:
         run: docker build -t fly-tailscale-exit:ci .
 
       - name: Smoke test — healthz serves 503 without auth
-        run: |
-          # Run the real image. With no auth key, tailscaled stays in NeedsLogin,
-          # so the healthz CGI must report 503. Asserting that proves start.sh
-          # runs, httpd serves /cgi-bin/healthz, and the CGI's unhealthy branch
-          # works — none of which the build alone checks. No tailnet/secrets needed.
-          docker run -d --name exit -p 9002:9002 -e FLY_REGION=ci \
-            --cap-add=NET_ADMIN --device /dev/net/tun fly-tailscale-exit:ci
-          code=""
-          for i in $(seq 1 30); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:9002/cgi-bin/healthz 2>/dev/null || true)
-            [ "$code" = "503" ] && break
-            sleep 1
-          done
-          echo "healthz returned: ${code:-<none>}"
-          if [ "$code" != "503" ]; then
-            echo "::error::expected 503 from /cgi-bin/healthz (unhealthy without auth), got ${code:-<none>}"
-            docker logs exit
-            exit 1
-          fi
-          echo "ok: start.sh + httpd + healthz CGI are wired correctly"
+        run: ./.github/scripts/smoke-test.sh fly-tailscale-exit:ci
