@@ -6,9 +6,11 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Needs write access to push the version-bump commit.
+# contents: write to push the version-bump commit; issues: write to open a
+# failure issue (see the last step).
 permissions:
   contents: write
+  issues: write
 
 jobs:
   update_tailscale:
@@ -52,3 +54,22 @@ jobs:
           git add Dockerfile
           git commit -m "chore: auto update tailscale to ${{ steps.bump.outputs.version }}"
           git push
+
+      # A weekly scheduled run that goes red is easy to miss, so surface failures
+      # explicitly. De-dupe: comment on the existing open issue rather than
+      # opening a new one every week until it's fixed and closed.
+      - name: Open an issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Auto-update tailscale failed"
+          existing=$(gh issue list --state open --json number,title \
+            --jq ".[] | select(.title == \"$title\") | .number" | head -n1)
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Failed again: $RUN_URL"
+          else
+            gh issue create --title "$title" \
+              --body "The scheduled tailscale auto-update workflow failed (build or smoke test). Run: $RUN_URL"
+          fi
