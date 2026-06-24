@@ -19,6 +19,7 @@ ip6tables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
     --state=mem: & # emphemeral-node mode (auto-remove)
     #--tun=userspace-networking
     #--socks5-server=localhost:1055
+TAILSCALED_PID=$!
 
 # Serve the health check endpoint for Fly's [checks] http check (see fly.toml).
 # /cgi-bin/healthz
@@ -69,4 +70,7 @@ fi
     #--advertise-tags=tag:fly-exit # requires ACL tagOwners
 
 echo "Tailscale started. Let's go!"
-sleep infinity
+
+# Block on tailscaled. If it exits (e.g. OOM-killed, see README), this returns
+# and the container exits so Fly restarts the machine
+wait "$TAILSCALED_PID"
