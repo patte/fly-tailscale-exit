@@ -215,6 +215,22 @@ Then uncomment `--advertise-tags=tag:fly-exit` (and `\` on the previous line) in
 All you need to do to invite friends into your network is to invite them to the github organization, have them install tailscale and login with github. They immediately see the available exit nodes and can use whichever they please.
 
 
+## Troubleshooting
+
+### `connmark` / `CONNMARK` warning in `fly logs` (harmless)
+
+You may see this health warning from tailscaled in `fly logs` (or under `tailscale status`):
+
+```
+- enabling connmark rules: adding [-m conntrack --ctstate ESTABLISHED,RELATED -j CONNMARK --restore-mark --nfmask 0xff0000 --ctmask 0xff0000] in mangle/PREROUTING: running [/usr/sbin/iptables -t mangle -I PREROUTING 1 -m conntrack --ctstate ESTABLISHED,RELATED -j CONNMARK --restore-mark --nfmask 0xff0000 --ctmask 0xff0000 --wait]: exit status 2: Warning: Extension CONNMARK revision 0 not supported, missing kernel module?
+iptables v1.8.11 (nf_tables): unknown option "--nfmask"
+```
+
+It's harmless and the exit node works fine. tailscaled uses a firewall mark (`fwmark`) plus `CONNMARK` to policy-route reply traffic, but that needs the `xt_CONNMARK` kernel module, which Fly's microVM kernel doesn't ship (`modprobe xt_CONNMARK` → `not found in modules.dep`). So tailscaled can't install that one rule. This is **not** an iptables-backend issue — switching `iptables` to the legacy backend (as the official Tailscale image does) hits the exact same missing module.
+
+Exit traffic still works because [start.sh](start.sh) sets up `MASQUERADE` itself and the kernel's connection tracking handles the return path: replies are un-NAT'd back to the Tailscale client and routed over `tailscale0`, so the `fwmark` policy-routing isn't needed.
+
+
 ## Why this probably is a bad idea
 - Dirty egress traffic for fly.io.<br>
 Usually traffic exiting fly machines is upstream API traffic not dirty users surfing the web. If too many people do this and use it for scraping or worse fly's traffic reputation might suffer.
