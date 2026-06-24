@@ -51,6 +51,9 @@ tailscale set --exit-node=fly-<region>
 
 Add more regions with `fly scale count 1 --region fra` (see step 13 below).
 
+## Alternative: the official Tailscale image
+
+Prefer Tailscale's official `tailscale/tailscale` image over this custom build? There's a verified [`official-image`](https://github.com/patte/fly-tailscale-exit/tree/official-image) branch where the whole exit node is a single `fly.toml`. [containerboot](https://tailscale.com/kb/1282/docker) handles auth, exit-node advertisement, NAT, and a native `/healthz`; the only Fly-specific gap — enabling IP forwarding — is closed by a one-line `[experimental] cmd` override that runs before the entrypoint. Confirmed routing real exit traffic.
 
 ## Intro
 
