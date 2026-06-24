@@ -6,7 +6,50 @@ fly-tailscale-exit
 This repo shows how to run tailscale on fly, specifically to run exit nodes.
 If you want to add tailscale to a fly.io application, follow this guide instead: https://tailscale.com/kb/1132/flydotio/
 
-⚠️ In September 2023 [Tailscale](https://tailscale.com/blog/mullvad-integration) and [Mullvad](https://mullvad.net/en/blog/tailscale-has-partnered-with-mullvad) announced to partner up: for $5/month you can use a mullvad exit node from up to 5 tailscale nodes. This is great news and I'd recommend to use this instead of the setup described here. Follow [this guide](https://tailscale.com/kb/1258/mullvad-exit-nodes) to set it up.
+Features:
+- [x] runs a Tailscale exit node on Fly.io microVMs (real kernel networking, not a userspace proxy)
+- [x] small docker image based on `alpine:3.23`, pulls a pinned `tailscale` release
+- [x] auth via an OAuth client (mints a tagged, ephemeral, pre-approved key) or a plain auth key
+- [x] advertises `--advertise-exit-node`, hostname `fly-<region>`
+- [x] IPv4 + IPv6 forwarding and `MASQUERADE` NAT for egress
+- [x] ephemeral, in-memory node state (`tailscaled --state=mem:`), auto-removed on shutdown
+- [x] health endpoint: busybox `httpd` serves `/cgi-bin/healthz`, wired to a Fly `[checks]` block
+  - returns `200` when the node is connected to the tailnet, `503` otherwise
+- [x] self-healing: the container exits if `tailscaled` dies, so Fly restarts the machine
+- [x] CI: `shellcheck`, `hadolint`, image build, and a no-secrets `healthz` smoke test
+- [x] weekly GitHub Action to auto-update `tailscale`, gated on CI, opening an issue on failure
+- [x] Dependabot for the base image and GitHub Actions
+
+> [!WARNING]  
+> In September 2023 [Tailscale](https://tailscale.com/blog/mullvad-integration) and [Mullvad](https://mullvad.net/en/blog/tailscale-has-partnered-with-mullvad) announced to partner up: for $5/month you can use a mullvad exit node from up to 5 tailscale nodes. This is great news and I'd recommend to use this instead of the setup described here. Follow [this guide](https://tailscale.com/kb/1258/mullvad-exit-nodes) to set it up.
+
+
+## Quickstart
+
+It assumes you have the [`fly` CLI](https://fly.io/docs/hands-on/installing/) installed and a Tailscale tailnet with public DNS configured. The full walkthrough (GitHub org, ACLs, `tag:fly-exit`, regions) is under [Setup](#setup) below.
+
+```bash
+git clone https://github.com/patte/fly-tailscale-exit.git
+cd fly-tailscale-exit
+
+fly launch                     # copy the bundled fly.toml, pick a name, don't deploy yet
+
+# Tailscale credentials as Fly secrets
+# OAuth client (https://login.tailscale.com/admin/settings/trust-credentials):
+fly secrets set TAILSCALE_OAUTH_CLIENT_ID=<id> TAILSCALE_OAUTH_SECRET=<secret>
+# or auth key (https://login.tailscale.com/admin/settings/keys):
+# fly secrets set TAILSCALE_AUTH_KEY=<key>
+
+fly deploy --ha=false          # a single machine
+```
+
+The node appears as `fly-<region>` in the [Tailscale admin](https://login.tailscale.com/admin/machines) — approve it as an exit node (and sign it if you use tailnet lock). Then route through it from any device:
+
+```bash
+tailscale set --exit-node=fly-<region>
+```
+
+Add more regions with `fly scale count 1 --region fra` (see step 13 below).
 
 
 ## Intro
