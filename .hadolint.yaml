@@ -1,0 +1,6 @@
+# Fail CI on warnings and errors; info/style are advisory.
+failure-threshold: warning
+ignored:
+  # Pinning apk package versions is impractical on Alpine — versions move with
+  # the pinned alpine base image, which is what we pin for reproducibility.
+  - DL3018

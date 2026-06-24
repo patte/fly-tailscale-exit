@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Shellcheck scripts
+        run: shellcheck -s sh start.sh healthz
+
+      - name: Hadolint Dockerfile
+        # Run hadolint's image directly (digest-pinned) rather than the
+        # third-party action wrapper. Auto-detects .hadolint.yaml from /repo.
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo \
+            hadolint/hadolint@sha256:30a8fd2e785ab6176eed53f74769e04f125afb2f74a6c52aef7d463583b6d45e \
+            hadolint Dockerfile
+
+      - name: Validate fly.toml parses
+        # Note: `fly config validate` is a server-side check that needs a Fly
+        # API token, so we keep CI token-free and just check it's valid TOML.
+        run: |
+          python3 -c "import tomllib; tomllib.load(open('fly.toml','rb')); print('fly.toml is valid TOML')"
+
+  build:
+    name: build & smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build image
+        run: docker build -t fly-tailscale-exit:ci .
+
+      - name: Smoke test — healthz serves 503 without auth
+        run: |
+          # Run the real image. With no auth key, tailscaled stays in NeedsLogin,
+          # so the healthz CGI must report 503. Asserting that proves start.sh
+          # runs, httpd serves /cgi-bin/healthz, and the CGI's unhealthy branch
+          # works — none of which the build alone checks. No tailnet/secrets needed.
+          docker run -d --name exit -p 9002:9002 -e FLY_REGION=ci \
+            --cap-add=NET_ADMIN --device /dev/net/tun fly-tailscale-exit:ci
+          code=""
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:9002/cgi-bin/healthz 2>/dev/null || true)
+            [ "$code" = "503" ] && break
+            sleep 1
+          done
+          echo "healthz returned: ${code:-<none>}"
+          if [ "$code" != "503" ]; then
+            echo "::error::expected 503 from /cgi-bin/healthz (unhealthy without auth), got ${code:-<none>}"
+            docker logs exit
+            exit 1
+          fi
+          echo "ok: start.sh + httpd + healthz CGI are wired correctly"
