@@ -24,6 +24,34 @@ Features:
 > In September 2023 [Tailscale](https://tailscale.com/blog/mullvad-integration) and [Mullvad](https://mullvad.net/en/blog/tailscale-has-partnered-with-mullvad) announced to partner up: for $5/month you can use a mullvad exit node from up to 5 tailscale nodes. This is great news and I'd recommend to use this instead of the setup described here. Follow [this guide](https://tailscale.com/kb/1258/mullvad-exit-nodes) to set it up.
 
 
+## Quickstart
+
+It assumes you have the [`fly` CLI](https://fly.io/docs/hands-on/installing/) installed and a Tailscale tailnet with public DNS configured. The full walkthrough (GitHub org, ACLs, `tag:fly-exit`, regions) is under [Setup](#setup) below.
+
+```bash
+git clone https://github.com/patte/fly-tailscale-exit.git
+cd fly-tailscale-exit
+
+fly launch                     # copy the bundled fly.toml, pick a name, don't deploy yet
+
+# Tailscale credentials as Fly secrets
+# OAuth client (https://login.tailscale.com/admin/settings/trust-credentials):
+fly secrets set TAILSCALE_OAUTH_CLIENT_ID=<id> TAILSCALE_OAUTH_SECRET=<secret>
+# or auth key (https://login.tailscale.com/admin/settings/keys):
+# fly secrets set TAILSCALE_AUTH_KEY=<key>
+
+fly deploy --ha=false          # a single machine
+```
+
+The node appears as `fly-<region>` in the [Tailscale admin](https://login.tailscale.com/admin/machines) — approve it as an exit node (and sign it if you use tailnet lock). Then route through it from any device:
+
+```bash
+tailscale set --exit-node=fly-<region>
+```
+
+Add more regions with `fly scale count 1 --region fra` (see step 13 below).
+
+
 ## Intro
 
 Did you ever need a wormhole to another place in the internet? But you didn't trust the shady VPN providers with ads all over YouTube?
