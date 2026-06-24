@@ -1,0 +1,4 @@
+# Local secrets
+env.sh
+.env
+.env.*
