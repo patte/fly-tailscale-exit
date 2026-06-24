@@ -254,7 +254,12 @@ To auto approve the fly machines as exit-nodes in tailscale. Add the following A
   },
 }
 ```
-Then uncomment `--advertise-tags=tag:fly-exit` (and `\` on the previous line) in [start.sh](start.sh) and deploy `fly deploy --strategy immediate`.
+Then set the tag via a Fly secret and redeploy:
+```
+fly secrets set TAILSCALE_ADVERTISE_TAGS=tag:fly-exit
+fly deploy --strategy immediate
+```
+([start.sh](start.sh) passes `TAILSCALE_ADVERTISE_TAGS` to `tailscale up --advertise-tags`, so no code edit is needed.)
 
 
 ## Invite your friends

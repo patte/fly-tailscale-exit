@@ -70,11 +70,21 @@ else
     AUTH_KEY="$TAILSCALE_AUTH_KEY"
 fi
 
+# Optionally advertise tags (requires matching ACL tagOwners, see README).
+# Set TAILSCALE_ADVERTISE_TAGS=tag:fly-exit (comma-separated) to enable.
+ADVERTISE_TAGS=""
+if [ -n "$TAILSCALE_ADVERTISE_TAGS" ]; then
+    ADVERTISE_TAGS="--advertise-tags=${TAILSCALE_ADVERTISE_TAGS}"
+fi
+
+# ADVERTISE_TAGS must stay unquoted: empty means "pass no flag", so a quoted
+# "" would hand tailscale up a bogus empty argument.
+# shellcheck disable=SC2086
 /app/tailscale up \
     --auth-key="${AUTH_KEY}" \
     --hostname="fly-${FLY_REGION}" \
-    --advertise-exit-node #\
-    #--advertise-tags=tag:fly-exit # requires ACL tagOwners
+    --advertise-exit-node \
+    ${ADVERTISE_TAGS}
 
 echo "Tailscale started. Let's go!"
 
