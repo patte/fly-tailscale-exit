@@ -1,34 +1,25 @@
 ARG TSVERSION=1.98.4
 ARG TSFILE=tailscale_${TSVERSION}_amd64.tgz
 
-FROM alpine:latest as tailscale
+FROM alpine:3.23 AS tailscale
 ARG TSFILE
 WORKDIR /app
 
 RUN wget https://pkgs.tailscale.com/stable/${TSFILE} && \
   tar xzf ${TSFILE} --strip-components=1
-COPY . ./
 
-FROM alpine:latest
+FROM alpine:3.23
 # busybox-extras provides httpd, used to serve the health check endpoint (see start.sh)
-RUN apk update && apk add ca-certificates iptables ip6tables busybox-extras \
-  && rm -rf /var/cache/apk/*
+RUN apk add --no-cache ca-certificates iptables ip6tables busybox-extras
 
-# creating directories for tailscale
-RUN mkdir -p /var/run/tailscale
-RUN mkdir -p /var/cache/tailscale
-RUN mkdir -p /var/lib/tailscale
+# tailscale state dirs + the directory httpd serves the health check from
+RUN mkdir -p /var/run/tailscale /var/cache/tailscale /var/lib/tailscale /var/www/cgi-bin
 
-# directory served by httpd for the health check endpoint
-RUN mkdir -p /var/www/cgi-bin
-
-# Copy binary to production image
-COPY --from=tailscale /app/tailscaled /app/tailscaled
-COPY --from=tailscale /app/tailscale /app/tailscale
-COPY --from=tailscale /app/start.sh /app/start.sh
-COPY --from=tailscale /app/healthz /var/www/cgi-bin/healthz
-RUN chmod +x /var/www/cgi-bin/healthz
+# tailscale binaries from the build stage; our scripts straight from the build context
+COPY --from=tailscale /app/tailscaled /app/tailscale /app/
+COPY start.sh /app/start.sh
+COPY healthz /var/www/cgi-bin/healthz
+RUN chmod +x /app/start.sh /var/www/cgi-bin/healthz
 
 # Run on container startup.
-USER root
 CMD ["/app/start.sh"]
