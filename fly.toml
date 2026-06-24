@@ -1,15 +1,26 @@
-# fly.toml app configuration file generated for tailwings on 2023-05-23T23:44:58+02:00
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
+# Tailscale exit node on Fly using the official tailscale/tailscale image —
+# no Dockerfile, no start.sh. See README.md for how and why.
 
 app = "tailwings"
 primary_region = "nrt"
 kill_signal = "SIGINT"
 kill_timeout = "5s"
 
+[build]
+  image = "tailscale/tailscale:latest"
+
 [env]
-  PORT = "41641"
+  TS_USERSPACE = "false"
+  TS_EXTRA_ARGS = "--advertise-exit-node --advertise-tags=tag:fly-exit"
+  # native health endpoint, served by containerboot
+  TS_ENABLE_HEALTH_CHECK = "true"
+  TS_LOCAL_ADDR_PORT = "0.0.0.0:9002"
+
+# The one thing containerboot won't do on Fly: enable IP forwarding (required for
+# exit/subnet routing). Enable it, set a per-region hostname, then exec the
+# image's original entrypoint.
+[experimental]
+  cmd = ["/bin/sh", "-c", "echo 1 > /proc/sys/net/ipv4/ip_forward; echo 1 > /proc/sys/net/ipv6/conf/all/forwarding; export TS_HOSTNAME=fly-$FLY_REGION; exec /usr/local/bin/containerboot"]
 
 [[services]]
   protocol = "udp"
@@ -19,21 +30,11 @@ kill_timeout = "5s"
   [[services.ports]]
     port = 41641
 
-  [services.concurrency]
-    type = "connections"
-    hard_limit = 100
-    soft_limit = 75
-
-# Machine-level health check. A top-level [checks] block is required here because
-# it lets us probe a custom port (9002): [[services.http_checks]] always targets
-# the service's internal_port (41641/udp), which has no TCP listener.
-# see start.sh and the healthz CGI script.
 [checks]
   [checks.health]
     type = "http"
     port = 9002
-    method = "get"
-    path = "/cgi-bin/healthz"
+    path = "/healthz"
     interval = "15s"
     timeout = "2s"
     grace_period = "30s"
