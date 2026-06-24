@@ -20,7 +20,8 @@ Features:
 - [x] weekly GitHub Action to auto-update `tailscale`, gated on CI, opening an issue on failure
 - [x] Dependabot for the base image and GitHub Actions
 
-⚠️ In September 2023 [Tailscale](https://tailscale.com/blog/mullvad-integration) and [Mullvad](https://mullvad.net/en/blog/tailscale-has-partnered-with-mullvad) announced to partner up: for $5/month you can use a mullvad exit node from up to 5 tailscale nodes. This is great news and I'd recommend to use this instead of the setup described here. Follow [this guide](https://tailscale.com/kb/1258/mullvad-exit-nodes) to set it up.
+> [!WARNING]  
+> In September 2023 [Tailscale](https://tailscale.com/blog/mullvad-integration) and [Mullvad](https://mullvad.net/en/blog/tailscale-has-partnered-with-mullvad) announced to partner up: for $5/month you can use a mullvad exit node from up to 5 tailscale nodes. This is great news and I'd recommend to use this instead of the setup described here. Follow [this guide](https://tailscale.com/kb/1258/mullvad-exit-nodes) to set it up.
 
 
 ## Intro
