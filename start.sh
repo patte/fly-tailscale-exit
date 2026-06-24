@@ -13,6 +13,13 @@ sysctl -p /etc/sysctl.conf
 iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 ip6tables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 
+# Enable UDP GRO forwarding on the internet-facing NIC for better exit-node
+# throughput (Tailscale perf best practice; needs tailscale >=1.54 + kernel >=6.2).
+# Not persistent across reboots, but start.sh runs on every boot.
+NETDEV=$(awk '$2 == "00000000" { print $1; exit }' /proc/net/route)
+ethtool -K "$NETDEV" rx-udp-gro-forwarding on rx-gro-list off || \
+    echo "Could not enable UDP GRO forwarding on ${NETDEV} (continuing)"
+
 /app/tailscaled \
     --verbose=1 \
     --port 41641 \

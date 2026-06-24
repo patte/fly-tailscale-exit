@@ -10,7 +10,7 @@ RUN wget https://pkgs.tailscale.com/stable/${TSFILE} && \
 
 FROM alpine:3.23
 # busybox-extras provides httpd, used to serve the health check endpoint (see start.sh)
-RUN apk add --no-cache ca-certificates iptables ip6tables busybox-extras
+RUN apk add --no-cache ca-certificates iptables ip6tables busybox-extras ethtool
 
 # tailscale state dirs + the directory httpd serves the health check from
 RUN mkdir -p /var/run/tailscale /var/cache/tailscale /var/lib/tailscale /var/www/cgi-bin
