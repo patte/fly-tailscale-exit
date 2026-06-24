@@ -20,6 +20,10 @@ ip6tables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
     #--tun=userspace-networking
     #--socks5-server=localhost:1055
 
+# Serve the health check endpoint for Fly's [checks] http check (see fly.toml).
+# /cgi-bin/healthz
+httpd -f -p 9002 -h /var/www &
+
 # Check if using OAuth or Auth Key
 if [ -n "$TAILSCALE_OAUTH_CLIENT_ID" ] && [ -n "$TAILSCALE_OAUTH_SECRET" ]; then
     echo "Using OAuth to generate an auth key"

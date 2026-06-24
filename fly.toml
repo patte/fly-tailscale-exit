@@ -18,7 +18,22 @@ kill_timeout = "5s"
 
   [[services.ports]]
     port = 41641
+
   [services.concurrency]
     type = "connections"
     hard_limit = 100
     soft_limit = 75
+
+# Machine-level health check. A top-level [checks] block is required here because
+# it lets us probe a custom port (9002): [[services.http_checks]] always targets
+# the service's internal_port (41641/udp), which has no TCP listener.
+# see start.sh and the healthz CGI script.
+[checks]
+  [checks.health]
+    type = "http"
+    port = 9002
+    method = "get"
+    path = "/cgi-bin/healthz"
+    interval = "15s"
+    timeout = "2s"
+    grace_period = "30s"
