@@ -63,17 +63,10 @@ fly secrets set -a my-exit-node \
 fly machine run ghcr.io/patte/fly-tailscale-exit:latest -a my-exit-node --region fra
 ```
 
-Approve the `fly-<region>` node in the [admin console](https://login.tailscale.com/admin/machines), then activate the exit node (`tailscale set --exit-node=fly-<region>`). Traffic may relay via Tailscale's [DERP](https://tailscale.com/kb/1232/derp-servers) servers.
+Approve the `fly-<region>` node in the [admin console](https://login.tailscale.com/admin/machines), then activate the exit node (`tailscale set --exit-node=fly-<region>`). On most networks Tailscale hole-punches a **direct** connection through Fly's NAT; restrictive client NATs (hard CGNAT, some mobile hotspots) fall back to [DERP](https://tailscale.com/kb/1232/derp-servers) relays.
 
 <details>
-<summary>Direct peer-to-peer, a managed app (fly.toml), image tags, and verifying the signature</summary>
-
-**Direct, peer-to-peer connections** — expose the UDP port, which on Fly needs a dedicated IPv4 (UDP can't use the free shared IPv4 or IPv6; ~$2/mo):
-
-```bash
-fly ips allocate-v4 -a my-exit-node
-fly machine run ghcr.io/patte/fly-tailscale-exit:latest -a my-exit-node --region fra --port 41641/udp
-```
+<summary>A managed app (fly.toml), image tags, and verifying the signature</summary>
 
 **For a more advanced setup** — health checks and easy scaling across regions — use the [Quickstart](#quickstart) clone; uncomment the `image =` line in its [`fly.toml`](fly.toml) to deploy this prebuilt image instead of building.
 
@@ -100,7 +93,7 @@ Well, why not run it "yourself"? This guide helps you to set up a globally distr
 - Instantly scale up or down nodes around the planet
 - Choose where your traffic exits to the internet from [30+ locations](https://fly.io/docs/reference/regions/).
 - Enjoy solid connections worldwide
-- ~~Bonus: the setup and the first 160GB of traffic each month are gratis.~~ _Update_: a dedicated IPv4 to enable P2P communication (not via DERP) now [costs $2/mo](https://fly.io/docs/about/pricing/#anycast-ip-addresses). _Update 2_: Fly.io's free tier (160/140GB) isn't meant for use by proxies. Your fly plan might get [upgraded to a $10/month “Advanced” plan](https://community.fly.io/t/4896). Thanks [@ignoramous](https://github.com/patte/fly-tailscale-exit/issues/37) for the heads up.
+- ~~Bonus: the setup and the first 160GB of traffic each month are gratis.~~ _Update_: ~~a dedicated IPv4 to enable P2P communication (not via DERP) now costs $2/mo~~ — peer-to-peer actually works for free via Tailscale's [NAT traversal](https://tailscale.com/blog/how-nat-traversal-works/); no dedicated IPv4 is needed (verified — it goes unused). _Update 2_: Fly.io's free tier (160/140GB) isn't meant for use by proxies. Your fly plan might get [upgraded to a $10/month “Advanced” plan](https://community.fly.io/t/4896). Thanks [@ignoramous](https://github.com/patte/fly-tailscale-exit/issues/37) for the heads up.
 
 
 Sounds too good to be true. Well that's probably because it is. I compiled this setup as an excercise while exploring the capabilities of fly.io and tailscale. This is probably not what you should use as a serious VPN replacement. Go to one of the few trustworthy providers. For the reasons why this is a bad idea, read [below](#user-content-why-this-probably-is-a-bad-idea).
@@ -199,17 +192,15 @@ fly secrets set TAILSCALE_OAUTH_CLIENT_ID=[your OAuth client ID] TAILSCALE_OAUTH
 Secrets are staged for the first deployment
 ```
 
-#### 10 Deploy (and IP and scale)
+#### 10 Deploy (and scale)
 
 ```
 fly deploy
-? Would you like to allocate a dedicated ipv4 address now? Yes
+? Would you like to allocate a dedicated ipv4 address now? No
 ```
-_Update_: fly.io does [not automatically allocate a dedicated IPv4 per app on the first deployment anymore](https://community.fly.io/t/announcement-shared-anycast-ipv4/9384). You want a dedicated IPv4 to be able to expose the UDP port on it and thus enable peer-to-peer connections (not via tailscale DERP). You have three options:
-- Say yes during the initial deploy.
-- Run the command `fly ips allocate-v4` to add a dedicated IPv4 later
-- Run `fly ips allocate-v6`. Direct connections to the node will only work if your local machine has a global IPv6. (not tested) 
-- Remove the `services.ports` section from fly.toml. This has the disadvantage that your node is never going to be directly reachable and all your traffic is routed via tailscale DERP servers.
+Answer **No** — you don't need a dedicated IPv4. Tailscale hole-punches a **direct** path through Fly's (endpoint-independent) NAT on its own, so a dedicated IPv4 does not improve connectivity for an exit node. (Verified: `tailscaled` advertises the machine's egress IP, never the Fly ingress IP, so the paid IP simply goes unused — which is why this `fly.toml` carries no `[[services]]` block.)
+
+> Whether a given client gets a direct connection or falls back to Tailscale [DERP](https://tailscale.com/kb/1232/derp-servers) relays depends on the **client's** network: most home/office networks hole-punch straight to direct; hard CGNAT or some mobile hotspots stay on DERP (still works, just relayed). Nothing on the Fly node changes this.
 
 At the time of writing fly deploys two machines per default. For this setup you probably want 1 machine per region. Run the following to remove the second machine:
 ```

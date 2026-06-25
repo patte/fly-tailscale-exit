@@ -16,23 +16,17 @@ kill_timeout = "5s"
 [env]
   PORT = "41641"
 
-[[services]]
-  protocol = "udp"
-  internal_port = 41641
-  processes = ["app"]
+# No [[services]] block: an exit node only needs outbound connectivity.
+# Tailscale reaches a direct path by hole-punching through Fly's (endpoint-
+# independent) NAT, so exposing the UDP port — and paying for the dedicated
+# IPv4 it would require — does NOT improve connectivity here (verified: the node
+# advertises its egress IP, never the Fly ingress IP). Whether a peer gets a
+# direct connection or falls back to Tailscale DERP relays depends on the
+# client's network, not on anything configured here.
 
-  [[services.ports]]
-    port = 41641
-
-  [services.concurrency]
-    type = "connections"
-    hard_limit = 100
-    soft_limit = 75
-
-# Machine-level health check. A top-level [checks] block is required here because
-# it lets us probe a custom port (9002): [[services.http_checks]] always targets
-# the service's internal_port (41641/udp), which has no TCP listener.
-# see start.sh and the healthz CGI script.
+# Machine-level health check on the custom httpd port (9002). A top-level
+# [checks] block (rather than [[services.http_checks]]) lets us probe 9002
+# directly. See start.sh and the healthz CGI script.
 [checks]
   [checks.health]
     type = "http"
