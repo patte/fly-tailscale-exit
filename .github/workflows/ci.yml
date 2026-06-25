@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Shellcheck scripts
-        run: shellcheck -s sh start.sh healthz .github/scripts/smoke-test.sh
+        run: shellcheck -s sh start.sh healthz .github/scripts/smoke-test.sh .github/scripts/prune-ghcr.sh
 
       - name: Hadolint Dockerfile
         # Run hadolint's image directly (digest-pinned) rather than the
