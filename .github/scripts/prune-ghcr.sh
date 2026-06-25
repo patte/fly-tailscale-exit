@@ -35,7 +35,12 @@ IMAGE="$(printf '%s' "$IMAGE" | tr '[:upper:]' '[:lower:]')"
 OWNER="$(printf '%s' "$OWNER" | tr '[:upper:]' '[:lower:]')"
 PACKAGE="$(printf '%s' "$PACKAGE" | tr '[:upper:]' '[:lower:]')"
 
-api="/users/${OWNER}/packages/container/${PACKAGE}/versions"
+# Packages live under /users/<user> or /orgs/<org>; GET /users/<owner> reports the type for both
+if [ "$(gh api "/users/${OWNER}" -q .type 2>/dev/null)" = "Organization" ]; then
+  api="/orgs/${OWNER}/packages/container/${PACKAGE}/versions"
+else
+  api="/users/${OWNER}/packages/container/${PACKAGE}/versions"
+fi
 tab="$(printf '\t')"
 
 # Every version: id, digest (.name), created_at, comma-joined tags.

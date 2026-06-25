@@ -13,9 +13,6 @@ kill_timeout = "5s"
 # [build]
 #   image = "ghcr.io/patte/fly-tailscale-exit:latest"   # or pin :<tailscale-version>, e.g. :1.98.4
 
-[env]
-  PORT = "41641"
-
 # No [[services]] block: an exit node only needs outbound connectivity.
 # Tailscale reaches a direct path by hole-punching through Fly's (endpoint-
 # independent) NAT, so exposing the UDP port — and paying for the dedicated
