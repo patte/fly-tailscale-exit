@@ -17,6 +17,7 @@ Features:
   - returns `200` when the node is connected to the tailnet, `503` otherwise
 - [x] self-healing: the container exits if `tailscaled` dies, so Fly restarts the machine
 - [x] CI: `shellcheck`, `hadolint`, image build, and a no-secrets `healthz` smoke test
+- [x] published to GHCR as a cosign-signed image (SLSA provenance + SBOM), so you can deploy without cloning
 - [x] weekly GitHub Action to auto-update `tailscale`, gated on CI, opening an issue on failure
 - [x] Dependabot for the base image and GitHub Actions
 
@@ -50,6 +51,43 @@ tailscale set --exit-node=fly-<region>
 ```
 
 Add more regions with `fly scale count 1 --region fra` (see step 13 below).
+
+## Even quicker: deploy straight from the image (no clone)
+
+Every change publishes a signed image to the GitHub Container Registry, so the fastest start is a few CLI commands — no clone, no Dockerfile, no `fly.toml`, no files at all:
+
+```bash
+fly apps create my-exit-node        # pick a unique name; creates no fly.toml
+fly secrets set -a my-exit-node \
+  TAILSCALE_OAUTH_CLIENT_ID=<id> TAILSCALE_OAUTH_SECRET=<secret>   # or TAILSCALE_AUTH_KEY=<key>
+fly machine run ghcr.io/patte/fly-tailscale-exit:latest -a my-exit-node --region fra
+```
+
+Approve the `fly-<region>` node in the [admin console](https://login.tailscale.com/admin/machines), then activate the exit node (`tailscale set --exit-node=fly-<region>`). Traffic may relay via Tailscale's [DERP](https://tailscale.com/kb/1232/derp-servers) servers.
+
+<details>
+<summary>Direct peer-to-peer, a managed app (fly.toml), image tags, and verifying the signature</summary>
+
+**Direct, peer-to-peer connections** — expose the UDP port, which on Fly needs a dedicated IPv4 (UDP can't use the free shared IPv4 or IPv6; ~$2/mo):
+
+```bash
+fly ips allocate-v4 -a my-exit-node
+fly machine run ghcr.io/patte/fly-tailscale-exit:latest -a my-exit-node --region fra --port 41641/udp
+```
+
+**For a more advanced setup** — health checks and easy scaling across regions — use the [Quickstart](#quickstart) clone; uncomment the `image =` line in its [`fly.toml`](fly.toml) to deploy this prebuilt image instead of building.
+
+**Tags** — `:latest` tracks the newest tailscale release; `:<tailscale-version>` (e.g. `:1.98.4`) pins one. The image is `linux/amd64`, rebuilt weekly for `alpine` base-image patches, and the 25 most recent versions are kept.
+
+**Verify the signature** — the image is keyless-signed with [cosign](https://docs.sigstore.dev/) and carries SLSA provenance + an SBOM:
+
+```bash
+cosign verify ghcr.io/patte/fly-tailscale-exit:latest \
+  --certificate-identity-regexp '^https://github.com/patte/fly-tailscale-exit/' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+</details>
 
 ## Alternative: the official Tailscale image
 

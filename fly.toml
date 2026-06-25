@@ -8,6 +8,11 @@ primary_region = "nrt"
 kill_signal = "SIGINT"
 kill_timeout = "5s"
 
+# By default `fly deploy` builds the Dockerfile in this repo. To deploy the
+# prebuilt, signed image instead, uncomment:
+# [build]
+#   image = "ghcr.io/patte/fly-tailscale-exit:latest"   # or pin :<tailscale-version>, e.g. :1.98.4
+
 [env]
   PORT = "41641"
 
