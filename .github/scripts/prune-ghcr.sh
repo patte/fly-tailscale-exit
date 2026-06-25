@@ -29,6 +29,12 @@ set -eu
 : "${GH_TOKEN:?}"
 MAX_VERSIONS="${MAX_VERSIONS:-25}"
 
+# GHCR refs and package names are lowercase; the caller may pass them straight
+# from ${{ github.repository }} etc., which can contain uppercase on some forks.
+IMAGE="$(printf '%s' "$IMAGE" | tr '[:upper:]' '[:lower:]')"
+OWNER="$(printf '%s' "$OWNER" | tr '[:upper:]' '[:lower:]')"
+PACKAGE="$(printf '%s' "$PACKAGE" | tr '[:upper:]' '[:lower:]')"
+
 api="/users/${OWNER}/packages/container/${PACKAGE}/versions"
 tab="$(printf '\t')"
 

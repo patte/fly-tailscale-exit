@@ -1,9 +1,11 @@
 name: Publish image
 
-# Publishes ghcr.io/<owner>/fly-tailscale-exit as :latest and :<tailscale-version>
-# Each run rebuilds, then prunes to the most-recent tagged releases, so the package keeps
-# pinnable versions for rollback without accumulating dead images, provenance,
-# or SBOM manifests.
+# Publishes ghcr.io/<owner>/<repo> as :latest and :<tailscale-version> so the
+# image can be deployed without cloning (`fly deploy -i ...`). Each run rebuilds,
+# then prunes to the most-recent tagged releases, so the package keeps pinnable
+# versions for rollback without accumulating dead images, provenance, or SBOM
+# manifests. Structure follows GitHub's docker-publish starter template; the
+# additions are the version-derived tag, the smoke-test gate, and the prune.
 
 on:
   push:
@@ -25,6 +27,10 @@ on:
     - cron: "0 6 * * 3"
   workflow_dispatch:
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 # packages: write to push to and prune GHCR; contents: read to checkout;
 # id-token: write for cosign keyless signing (Sigstore/Fulcio OIDC challenge).
 permissions:
@@ -44,20 +50,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Resolve image ref and tailscale version
-        id: meta
-        run: |
-          # Name the image after the repo (GHCR requires a lowercase ref), so
-          # forks/test repos get their own package instead of colliding.
-          repo=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          # The tailscale version pinned in the Dockerfile becomes the image tag.
-          version=$(sed -n '1s/^ARG TSVERSION=//p' Dockerfile)
-          {
-            echo "owner=${repo%%/*}"
-            echo "package=${repo#*/}"
-            echo "image=ghcr.io/$repo"
-            echo "version=$version"
-          } >>"$GITHUB_OUTPUT"
+      # The tailscale version pinned in the Dockerfile becomes the image tag.
+      - name: Read tailscale version
+        id: ver
+        run: echo "version=$(sed -n '1s/^ARG TSVERSION=//p' Dockerfile)" >>"$GITHUB_OUTPUT"
 
       # Gate the publish on the same behavioural check CI runs: build the image
       # and confirm healthz serves 503 without auth. If this fails the job stops
@@ -71,7 +67,7 @@ jobs:
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
@@ -81,17 +77,18 @@ jobs:
       - name: Install cosign
         uses: sigstore/cosign-installer@v4.1.2
 
-      # OCI labels so GHCR links the package back to this repo and shows
-      # source/revision/created. We only consume the labels output; tags are set
-      # explicitly on the build step below (our version axis is the tailscale
-      # version, not a git tag).
-      - name: Docker metadata (labels)
-        id: labels
+      # Tags (:latest + :<tailscale-version>) and OCI labels. metadata-action
+      # lowercases the image name and links the package back to this repo.
+      - name: Docker metadata
+        id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ steps.meta.outputs.image }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ steps.ver.outputs.version }}
 
-      - name: Build and push :latest and :<tailscale-version>
+      - name: Build and push
         id: build
         uses: docker/build-push-action@v6
         with:
@@ -100,32 +97,30 @@ jobs:
           # runs amd64.
           platforms: linux/amd64
           push: true
-          tags: |
-            ${{ steps.meta.outputs.image }}:latest
-            ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.version }}
-          labels: ${{ steps.labels.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           provenance: true
           sbom: true
 
       # Keyless-sign by digest (covers both tags, which share it). Writes the
-      # signature to GHCR as a sha256-<digest>.sig artifact and logs the
-      # certificate to the public Rekor transparency log. The prune step is
-      # signature-aware: it keeps each kept release's .sig and drops the rest.
+      # signature to GHCR as a cosign artifact and logs the certificate to the
+      # public Rekor transparency log. The prune step is signature-aware: it
+      # keeps each kept release's signature and drops the rest.
       - name: Sign the image (keyless)
         env:
-          IMAGE: ${{ steps.meta.outputs.image }}
+          IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           DIGEST: ${{ steps.build.outputs.digest }}
         run: cosign sign --yes "${IMAGE}@${DIGEST}"
 
-      # Keep the most-recent tagged releases (and their provenance/SBOM
-      # children) and delete the rest, so :<version> pins stay available for
-      # rollback without the package growing forever. See the script for why
+      # Keep the most-recent tagged releases (and their provenance/SBOM children
+      # and signatures) and delete the rest, so :<version> pins stay available
+      # for rollback without the package growing forever. See the script for why
       # this beats the off-the-shelf "delete untagged" actions.
       - name: Prune old releases
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          IMAGE: ${{ steps.meta.outputs.image }}
-          OWNER: ${{ steps.meta.outputs.owner }}
-          PACKAGE: ${{ steps.meta.outputs.package }}
+          IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          OWNER: ${{ github.repository_owner }}
+          PACKAGE: ${{ github.event.repository.name }}
           MAX_VERSIONS: "25"
         run: ./.github/scripts/prune-ghcr.sh
