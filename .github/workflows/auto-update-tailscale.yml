@@ -7,10 +7,12 @@ on:
   workflow_dispatch:
 
 # contents: write to push the version-bump commit; issues: write to open a
-# failure issue (see the last step).
+# failure issue (see the last step); actions: write to dispatch the publish
+# workflow after a bump (a GITHUB_TOKEN push can't trigger it directly).
 permissions:
   contents: write
   issues: write
+  actions: write
 
 jobs:
   update_tailscale:
@@ -54,6 +56,15 @@ jobs:
           git add Dockerfile
           git commit -m "chore: auto update tailscale to ${{ steps.bump.outputs.version }}"
           git push
+
+      # A push made with GITHUB_TOKEN does not trigger other workflows, so start
+      # the publish explicitly. workflow_dispatch via the API is exempt from that
+      # rule, so this needs no PAT — just actions: write above.
+      - name: Trigger image publish
+        if: steps.bump.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run publish.yml --ref main
 
       # A weekly scheduled run that goes red is easy to miss, so surface failures
       # explicitly. De-dupe: comment on the existing open issue rather than

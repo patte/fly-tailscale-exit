@@ -19,10 +19,10 @@ on:
       - .github/scripts/prune-ghcr.sh
   # Weekly rebuild to pick up alpine base-image patches: the Dockerfile pins
   # alpine by tag (not digest), so a patch release within 3.23 never changes a
-  # tracked file and would otherwise never be rebuilt. Offset from the Sunday
-  # 00:00 tailscale auto-update.
+  # tracked file and would otherwise never be rebuilt. Mid-week, spaced away
+  # from the Sunday 00:00 tailscale auto-update (which triggers its own publish).
   schedule:
-    - cron: "0 6 * * 1"
+    - cron: "0 6 * * 3"
   workflow_dispatch:
 
 # packages: write to push to and prune GHCR; contents: read to checkout;
