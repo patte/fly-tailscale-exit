@@ -13,14 +13,6 @@ kill_timeout = "5s"
 # [build]
 #   image = "ghcr.io/patte/fly-tailscale-exit:latest"   # or pin :<tailscale-version>, e.g. :1.98.4
 
-# No [[services]] block: an exit node only needs outbound connectivity.
-# Tailscale reaches a direct path by hole-punching through Fly's (endpoint-
-# independent) NAT, so exposing the UDP port — and paying for the dedicated
-# IPv4 it would require — does NOT improve connectivity here (verified: the node
-# advertises its egress IP, never the Fly ingress IP). Whether a peer gets a
-# direct connection or falls back to Tailscale DERP relays depends on the
-# client's network, not on anything configured here.
-
 # Machine-level health check on the custom httpd port (9002). A top-level
 # [checks] block (rather than [[services.http_checks]]) lets us probe 9002
 # directly. See start.sh and the healthz CGI script.
@@ -33,3 +25,13 @@ kill_timeout = "5s"
     interval = "15s"
     timeout = "2s"
     grace_period = "30s"
+
+# No [[services]] block: a dedicated IPv4 + exposed UDP port can't improve P2P
+# for an exit node, for two reasons:
+#   1. Fly's egress NAT is endpoint-independent, so Tailscale hole-punches a
+#      direct path for free — no public endpoint needed.
+#   2. Even if you wanted the paid IP, tailscaled advertises the machine's egress
+#      IP (via STUN), never Fly's ingress Anycast IP, so it's never reachable as
+#      an endpoint anyway. ([#8862](https://github.com/tailscale/tailscale/issues/8862))
+# (Verified.) Whether a peer goes direct or falls back to Tailscale DERP relays
+# then depends on the client's NAT, not on anything configured here.

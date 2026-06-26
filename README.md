@@ -198,7 +198,7 @@ Secrets are staged for the first deployment
 fly deploy
 ? Would you like to allocate a dedicated ipv4 address now? No
 ```
-Answer **No** — you don't need a dedicated IPv4. Tailscale hole-punches a **direct** path through Fly's (endpoint-independent) NAT on its own, so a dedicated IPv4 does not improve connectivity for an exit node. (Verified: `tailscaled` advertises the machine's egress IP, never the Fly ingress IP, so the paid IP simply goes unused — which is why this `fly.toml` carries no `[[services]]` block.)
+Answer **No** — a dedicated IPv4 can't improve P2P for an exit node, for two reasons. (1) Fly's egress NAT is endpoint-independent, so Tailscale hole-punches a **direct** path for free. (2) Even if you wanted the paid IP, `tailscaled` only advertises the machine's *egress* IP (via STUN), never Fly's *ingress* Anycast IP, so it's never reachable as an endpoint anyway ([#8862](https://github.com/tailscale/tailscale/issues/8862)). (Exposing a public UDP port *is* the standard fix on symmetric-NAT clouds like AWS/Azure — Fly just isn't one.) Hence no `[[services]]` block in this `fly.toml` and no need to allocate a dedicated IPv4.
 
 > Whether a given client gets a direct connection or falls back to Tailscale [DERP](https://tailscale.com/kb/1232/derp-servers) relays depends on the **client's** network: most home/office networks hole-punch straight to direct; hard CGNAT or some mobile hotspots stay on DERP (still works, just relayed). Nothing on the Fly node changes this.
 
