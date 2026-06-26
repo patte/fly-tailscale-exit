@@ -70,11 +70,17 @@ else
     AUTH_KEY="$TAILSCALE_AUTH_KEY"
 fi
 
+# Optionally advertise tags (requires matching ACL tagOwners, see README).
+# Set TAILSCALE_ADVERTISE_TAGS=tag:fly-exit (comma-separated, no spaces).
+# ${VAR:+...} adds the flag only when the var is set and drops it when empty.
+# Unquoted on purpose: a tag list is a single token (tags contain no spaces),
+# so there's nothing to word-split.
+# shellcheck disable=SC2086
 /app/tailscale up \
     --auth-key="${AUTH_KEY}" \
     --hostname="fly-${FLY_REGION}" \
-    --advertise-exit-node #\
-    #--advertise-tags=tag:fly-exit # requires ACL tagOwners
+    --advertise-exit-node \
+    ${TAILSCALE_ADVERTISE_TAGS:+--advertise-tags=$TAILSCALE_ADVERTISE_TAGS}
 
 echo "Tailscale started. Let's go!"
 

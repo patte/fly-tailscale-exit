@@ -17,6 +17,7 @@ Features:
   - returns `200` when the node is connected to the tailnet, `503` otherwise
 - [x] self-healing: the container exits if `tailscaled` dies, so Fly restarts the machine
 - [x] CI: `shellcheck`, `hadolint`, image build, and a no-secrets `healthz` smoke test
+- [x] published to GHCR as a cosign-signed image (SLSA provenance + SBOM), so you can deploy without cloning
 - [x] weekly GitHub Action to auto-update `tailscale`, gated on CI, opening an issue on failure
 - [x] Dependabot for the base image and GitHub Actions
 
@@ -24,9 +25,39 @@ Features:
 > In September 2023 [Tailscale](https://tailscale.com/blog/mullvad-integration) and [Mullvad](https://mullvad.net/en/blog/tailscale-has-partnered-with-mullvad) announced to partner up: for $5/month you can use a mullvad exit node from up to 5 tailscale nodes. This is great news and I'd recommend to use this instead of the setup described here. Follow [this guide](https://tailscale.com/kb/1258/mullvad-exit-nodes) to set it up.
 
 
-## Quickstart
+## Ultra-quickstart
 
 It assumes you have the [`fly` CLI](https://fly.io/docs/hands-on/installing/) installed and a Tailscale tailnet with public DNS configured. The full walkthrough (GitHub org, ACLs, `tag:fly-exit`, regions) is under [Setup](#setup) below.
+
+Every change publishes a signed image to the GitHub Container Registry, so the fastest start is a few CLI commands:
+
+```bash
+fly apps create fly-exit-node        # pick a unique name; creates no fly.toml
+fly secrets set -a fly-exit-node \
+  TAILSCALE_OAUTH_CLIENT_ID=<id> TAILSCALE_OAUTH_SECRET=<secret>   # or TAILSCALE_AUTH_KEY=<key>
+fly machine run ghcr.io/patte/fly-tailscale-exit:latest -a fly-exit-node --region fra
+```
+
+Approve the `fly-<region>` node in the [admin console](https://login.tailscale.com/admin/machines), then activate the exit node (`tailscale set --exit-node=fly-<region>`). On most networks Tailscale hole-punches a **direct** connection through Fly's NAT; restrictive client NATs (hard CGNAT, some mobile hotspots) fall back to [DERP](https://tailscale.com/kb/1232/derp-servers) relays.
+
+<details>
+<summary>Image tags and verifying the signature</summary>
+
+**Tags** — `:latest` tracks the newest tailscale release; `:<tailscale-version>` (e.g. `:1.98.4`) pins one. The image is `linux/amd64`, rebuilt weekly for `alpine` base-image patches, and the 25 most recent versions are kept.
+
+**Verify the signature** — the image is keyless-signed with [cosign](https://docs.sigstore.dev/) and carries SLSA provenance + an SBOM:
+
+```bash
+cosign verify ghcr.io/patte/fly-tailscale-exit:latest \
+  --certificate-identity-regexp '^https://github.com/patte/fly-tailscale-exit/' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+</details>
+
+## Quickstart
+
+Prefer your own [`fly.toml`](fly.toml) — health checks, easy multi-region scaling, and a build from source instead of the prebuilt image? Clone and deploy:
 
 ```bash
 git clone https://github.com/patte/fly-tailscale-exit.git
@@ -49,7 +80,7 @@ The node appears as `fly-<region>` in the [Tailscale admin](https://login.tailsc
 tailscale set --exit-node=fly-<region>
 ```
 
-Add more regions with `fly scale count 1 --region fra` (see step 13 below).
+Add more regions with `fly scale count 1 --region fra` (see step 13 below). To deploy the prebuilt image instead of building from source, uncomment the `image =` line in the bundled [`fly.toml`](fly.toml).
 
 ## Alternative: the official Tailscale image
 
@@ -62,7 +93,7 @@ Well, why not run it "yourself"? This guide helps you to set up a globally distr
 - Instantly scale up or down nodes around the planet
 - Choose where your traffic exits to the internet from [30+ locations](https://fly.io/docs/reference/regions/).
 - Enjoy solid connections worldwide
-- ~~Bonus: the setup and the first 160GB of traffic each month are gratis.~~ _Update_: a dedicated IPv4 to enable P2P communication (not via DERP) now [costs $2/mo](https://fly.io/docs/about/pricing/#anycast-ip-addresses). _Update 2_: Fly.io's free tier (160/140GB) isn't meant for use by proxies. Your fly plan might get [upgraded to a $10/month “Advanced” plan](https://community.fly.io/t/4896). Thanks [@ignoramous](https://github.com/patte/fly-tailscale-exit/issues/37) for the heads up.
+- ~~Bonus: the setup and the first 160GB of traffic each month are gratis.~~ _Update_: ~~a dedicated IPv4 to enable P2P communication (not via DERP) now costs $2/mo~~ — peer-to-peer actually works for free via Tailscale's [NAT traversal](https://tailscale.com/blog/how-nat-traversal-works/); no dedicated IPv4 is needed (verified — it goes unused). _Update 2_: Fly.io's free tier (160/140GB) isn't meant for use by proxies. Your fly plan might get [upgraded to a $10/month “Advanced” plan](https://community.fly.io/t/4896). Thanks [@ignoramous](https://github.com/patte/fly-tailscale-exit/issues/37) for the heads up.
 
 
 Sounds too good to be true. Well that's probably because it is. I compiled this setup as an excercise while exploring the capabilities of fly.io and tailscale. This is probably not what you should use as a serious VPN replacement. Go to one of the few trustworthy providers. For the reasons why this is a bad idea, read [below](#user-content-why-this-probably-is-a-bad-idea).
@@ -161,17 +192,15 @@ fly secrets set TAILSCALE_OAUTH_CLIENT_ID=[your OAuth client ID] TAILSCALE_OAUTH
 Secrets are staged for the first deployment
 ```
 
-#### 10 Deploy (and IP and scale)
+#### 10 Deploy (and scale)
 
 ```
 fly deploy
-? Would you like to allocate a dedicated ipv4 address now? Yes
+? Would you like to allocate a dedicated ipv4 address now? No
 ```
-_Update_: fly.io does [not automatically allocate a dedicated IPv4 per app on the first deployment anymore](https://community.fly.io/t/announcement-shared-anycast-ipv4/9384). You want a dedicated IPv4 to be able to expose the UDP port on it and thus enable peer-to-peer connections (not via tailscale DERP). You have three options:
-- Say yes during the initial deploy.
-- Run the command `fly ips allocate-v4` to add a dedicated IPv4 later
-- Run `fly ips allocate-v6`. Direct connections to the node will only work if your local machine has a global IPv6. (not tested) 
-- Remove the `services.ports` section from fly.toml. This has the disadvantage that your node is never going to be directly reachable and all your traffic is routed via tailscale DERP servers.
+Answer **No** — a dedicated IPv4 can't improve P2P for an exit node, for two reasons. (1) Fly's egress NAT is endpoint-independent, so Tailscale hole-punches a **direct** path for free. (2) Even if you wanted the paid IP, `tailscaled` only advertises the machine's *egress* IP (via STUN), never Fly's *ingress* Anycast IP, so it's never reachable as an endpoint anyway ([#8862](https://github.com/tailscale/tailscale/issues/8862)). (Exposing a public UDP port *is* the standard fix on symmetric-NAT clouds like AWS/Azure — Fly just isn't one.) Hence no `[[services]]` block in this `fly.toml` and no need to allocate a dedicated IPv4.
+
+> Whether a given client gets a direct connection or falls back to Tailscale [DERP](https://tailscale.com/kb/1232/derp-servers) relays depends on the **client's** network: most home/office networks hole-punch straight to direct; hard CGNAT or some mobile hotspots stay on DERP (still works, just relayed). Nothing on the Fly node changes this.
 
 At the time of writing fly deploys two machines per default. For this setup you probably want 1 machine per region. Run the following to remove the second machine:
 ```
@@ -254,7 +283,12 @@ To auto approve the fly machines as exit-nodes in tailscale. Add the following A
   },
 }
 ```
-Then uncomment `--advertise-tags=tag:fly-exit` (and `\` on the previous line) in [start.sh](start.sh) and deploy `fly deploy --strategy immediate`.
+Then set the tag via a Fly secret and redeploy:
+```
+fly secrets set TAILSCALE_ADVERTISE_TAGS=tag:fly-exit
+fly deploy --strategy immediate
+```
+([start.sh](start.sh) passes `TAILSCALE_ADVERTISE_TAGS` to `tailscale up --advertise-tags`, so no code edit is needed.)
 
 
 ## Invite your friends

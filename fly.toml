@@ -8,26 +8,14 @@ primary_region = "nrt"
 kill_signal = "SIGINT"
 kill_timeout = "5s"
 
-[env]
-  PORT = "41641"
+# By default `fly deploy` builds the Dockerfile in this repo. To deploy the
+# prebuilt, signed image instead, uncomment:
+# [build]
+#   image = "ghcr.io/patte/fly-tailscale-exit:latest"   # or pin :<tailscale-version>, e.g. :1.98.4
 
-[[services]]
-  protocol = "udp"
-  internal_port = 41641
-  processes = ["app"]
-
-  [[services.ports]]
-    port = 41641
-
-  [services.concurrency]
-    type = "connections"
-    hard_limit = 100
-    soft_limit = 75
-
-# Machine-level health check. A top-level [checks] block is required here because
-# it lets us probe a custom port (9002): [[services.http_checks]] always targets
-# the service's internal_port (41641/udp), which has no TCP listener.
-# see start.sh and the healthz CGI script.
+# Machine-level health check on the custom httpd port (9002). A top-level
+# [checks] block (rather than [[services.http_checks]]) lets us probe 9002
+# directly. See start.sh and the healthz CGI script.
 [checks]
   [checks.health]
     type = "http"
@@ -37,3 +25,13 @@ kill_timeout = "5s"
     interval = "15s"
     timeout = "2s"
     grace_period = "30s"
+
+# No [[services]] block: a dedicated IPv4 + exposed UDP port can't improve P2P
+# for an exit node, for two reasons:
+#   1. Fly's egress NAT is endpoint-independent, so Tailscale hole-punches a
+#      direct path for free — no public endpoint needed.
+#   2. Even if you wanted the paid IP, tailscaled advertises the machine's egress
+#      IP (via STUN), never Fly's ingress Anycast IP, so it's never reachable as
+#      an endpoint anyway. ([#8862](https://github.com/tailscale/tailscale/issues/8862))
+# (Verified.) Whether a peer goes direct or falls back to Tailscale DERP relays
+# then depends on the client's NAT, not on anything configured here.
