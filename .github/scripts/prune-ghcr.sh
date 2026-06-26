@@ -17,7 +17,8 @@
 #   IMAGE         image ref without tag, e.g. ghcr.io/patte/fly-tailscale-exit
 #   OWNER         GHCR owner (user/org) that owns the package
 #   PACKAGE       package name, e.g. fly-tailscale-exit
-#   MAX_VERSIONS  most-recent tagged releases to keep (default 25; 0 deletes all)
+#   MAX_VERSIONS  most-recent tagged releases to keep (default 25; 0 targets all,
+#                 but GHCR won't let the API delete a package's last version)
 #   GH_TOKEN      token with packages:write on the package (GITHUB_TOKEN is
 #                 enough when the package inherits access from this repo;
 #                 otherwise a PAT with delete:packages)
@@ -55,7 +56,9 @@ sig_re='^sha256-[0-9a-f]+(\.(sig|att|sbom))?$'
 
 # Releases = tagged versions that are not cosign artifacts, newest first by
 # creation time (ISO-8601 sorts lexically == chronologically). Keep the digests
-# of the MAX_VERSIONS most-recent (:latest is the newest push, always included).
+# of the MAX_VERSIONS most-recent; the newest push carries :latest, so it's kept
+# whenever MAX_VERSIONS>=1. (MAX_VERSIONS=0 keeps none and targets every version,
+# but GHCR won't delete a package's last remaining one, so one always survives.)
 keep_indexes="$(mktemp)"
 awk -F"$tab" -v re="$sig_re" 'NF>=4 && $4 != "" && $4 !~ re' "$all" \
   | sort -t"$tab" -k3,3r \
