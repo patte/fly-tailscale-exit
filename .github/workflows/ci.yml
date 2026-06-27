@@ -10,7 +10,7 @@ jobs:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Shellcheck scripts
         run: shellcheck -s sh start.sh healthz .github/scripts/smoke-test.sh .github/scripts/prune-ghcr.sh
@@ -33,7 +33,7 @@ jobs:
     name: build & smoke test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Build image
         run: docker build -t fly-tailscale-exit:ci .
