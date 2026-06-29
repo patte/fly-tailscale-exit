@@ -1,14 +1,14 @@
 ARG TSVERSION=1.98.4
 ARG TSFILE=tailscale_${TSVERSION}_amd64.tgz
 
-FROM alpine:3.23 AS tailscale
+FROM alpine:3.24 AS tailscale
 ARG TSFILE
 WORKDIR /app
 
 RUN wget https://pkgs.tailscale.com/stable/${TSFILE} && \
   tar xzf ${TSFILE} --strip-components=1
 
-FROM alpine:3.23
+FROM alpine:3.24
 # busybox-extras provides httpd, used to serve the health check endpoint (see start.sh)
 RUN apk add --no-cache ca-certificates iptables ip6tables busybox-extras ethtool
 
