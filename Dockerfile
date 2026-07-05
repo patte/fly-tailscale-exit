@@ -1,4 +1,4 @@
-ARG TSVERSION=1.98.4
+ARG TSVERSION=1.98.8
 ARG TSFILE=tailscale_${TSVERSION}_amd64.tgz
 
 FROM alpine:3.23 AS tailscale
